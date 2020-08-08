@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #define UNIX_PATH_MAX 108
@@ -104,6 +105,9 @@ int main (void) {
   int ret = 0;
   struct libinput *li = NULL;
   int server_socket = -1;
+
+  // file creation rights, we make sure that anyone can connect to the socket
+  umask (0111);
 
   // unix socket
   unlink (MUU_SOCKET_PATH);
