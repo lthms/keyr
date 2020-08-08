@@ -13,7 +13,7 @@ ${MUD} : mud/main.c
 	@mkdir -p ${BINDIR}
 	gcc $< -o $@ ${WARGS} ${LARGS}
 
-${MUF} :
+${MUF} ::
 	cargo build --release
 	cp target/release/muf $@
 
