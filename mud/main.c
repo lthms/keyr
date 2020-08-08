@@ -11,6 +11,8 @@
 
 #define UNIX_PATH_MAX 108
 
+typedef uint32_t muu_count;
+
 static int open_restricted (const char *path, int flags, void *data) {
 	int fd = open (path, flags);
 	return fd < 0 ? -errno : fd;
@@ -42,10 +44,6 @@ struct libinput *muu_libinput_create () {
     goto exit;
   }
 
-  // We will not have to manipulate `udev' manually, and therefore we decrement
-  // its reference counter.
-  udev_unref (udev);
-
   if (libinput_udev_assign_seat (li, "seat0") != 0) {
     goto exit;
   }
@@ -59,7 +57,7 @@ struct libinput *muu_libinput_create () {
 }
 
 void muu_libinput_event_handle (struct libinput_event *lev,
-                                int *state
+                                muu_count *state
                                 ) {
   enum libinput_event_type event_type = libinput_event_get_type (lev);
 
@@ -80,7 +78,7 @@ void muu_libinput_event_handle (struct libinput_event *lev,
   }
 }
 
-int muu_poll_libinput_events (struct libinput *li, int *state) {
+int muu_poll_libinput_events (struct libinput *li, muu_count *state) {
   if (libinput_dispatch (li) != 0) {
     goto exit;
   }
@@ -101,7 +99,7 @@ int muu_poll_libinput_events (struct libinput *li, int *state) {
 #define MUU_SOCKET_PATH "/tmp/mud.socket"
 
 int main (void) {
-  int state = 0;
+  muu_count state = 0;
   int ret = 0;
   struct libinput *li = NULL;
   int server_socket = -1;

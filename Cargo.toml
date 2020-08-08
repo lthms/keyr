@@ -1,0 +1,12 @@
+[package]
+name = "muu"
+version ="0.0.0-dev"
+authors = ["Thomas Letan <lthms@soap.coffee"]
+edition = "2018"
+
+[dependencies]
+xdg = "2"
+
+[[bin]]
+name = "muf"
+path = "muf/main.rs"
