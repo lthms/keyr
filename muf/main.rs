@@ -49,6 +49,14 @@ fn update_hourly_count(count : u32) -> Result<u32> {
 
     let cur_key = date.format("%H%M").to_string();
 
+    let global_count = today_file
+        .read_exact(&mut count_buff)
+        .and_then(|_| today_file.seek(SeekFrom::Start(0)))
+        .map(|_| u32::from_le_bytes(count_buff) + count)
+        .unwrap_or(count);
+
+    today_file.write_all(&global_count.to_le_bytes())?;
+
     // read the key
     match today_file.seek(SeekFrom::End(-8)) {
         Ok(_) => { // there is something to read
@@ -63,51 +71,26 @@ fn update_hourly_count(count : u32) -> Result<u32> {
 
                 today_file.seek(SeekFrom::End(-4))?;
                 today_file.write_all(&new_count.to_le_bytes())?;
-
-                Ok(new_count)
             } else {
                 today_file.write_all(cur_key.as_bytes())?;
                 today_file.write_all(&count.to_le_bytes())?;
-                Ok(count)
             }
         },
         _ => { // nothing to read yet
-            today_file.seek(SeekFrom::Start(0))?;
+            today_file.seek(SeekFrom::Start(4))?;
             today_file.write_all(cur_key.as_bytes())?;
             today_file.write_all(&count.to_le_bytes())?;
-
-            Ok(count)
         }
     }
-}
 
-fn get_today_count() -> Result<u32> {
-    let date = Utc::now();
-    let mut key_buff = [0u8; 4];
-    let mut count_buff = [0u8; 4];
-
-    let mut today_file = open_data_file(&date.format("%Y%m%d").to_string())?;
-
-    let mut count = 0u32;
-
-    loop {
-        match today_file.read_exact(&mut key_buff)
-            .and_then(|_| today_file.read_exact(&mut count_buff))
-            .map(|_| u32::from_le_bytes(count_buff)) {
-                Ok(min_count) => count += min_count,
-                _ => break
-            }
-    }
-
-    Ok(count)
+    Ok(global_count)
 }
 
 fn main() -> Result<()> {
     let count = muu_fetch()?;
 
     let new_global_count = update_global_count(count)?;
-    update_hourly_count(count)?;
-    let today_count = get_today_count()?;
+    let today_count = update_hourly_count(count)?;
 
     println!("{} ({} today)", new_global_count, today_count);
 
