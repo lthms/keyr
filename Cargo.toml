@@ -8,6 +8,10 @@ edition = "2018"
 xdg = "2"
 chrono = "0.4"
 
+[lib]
+name = "mul"
+path = "mul/lib.rs"
+
 [[bin]]
 name = "muf"
 path = "muf/main.rs"
