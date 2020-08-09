@@ -29,38 +29,41 @@ fn update_global_count(count : u32) -> Result<u32> {
 
     let new_count = count + prev;
 
-    global.seek_global_count()?;
-    global.write_global_count(new_count)?;
+    if count != 0 {
+        global.seek_global_count()?;
+        global.write_global_count(new_count)?;
+    }
 
     Ok(new_count)
 }
 
 fn update_day_count(count : u32) -> Result<u32> {
     let date = Utc::now();
-    let cur_key = date.format("%H%M").to_string();
 
     let mut today_file = DayFile::open(&date.date(), open_data_options())?;
 
-    let global_count = today_file.read_global_count()
-        .map(|x| x + count)
-        .unwrap_or(count);
+    let prev = today_file.read_global_count().unwrap_or(0u32);
 
-    today_file.seek_global_count()?;
-    today_file.write_global_count(global_count)?;
+    let new_count = prev + count;
 
-    if let Some((pre_key, pre_count)) = today_file.read_entry(EntryLoc::Last)? {
-        if pre_key == cur_key {
-            let new_count = pre_count + count;
+    if count != 0 {
+        today_file.seek_global_count()?;
+        today_file.write_global_count(new_count)?;
 
-            today_file.update_count(new_count, EntryLoc::Previous)?;
+        let cur_key = date.format("%H%M").to_string();
+
+        if let Some((pre_key, pre_count)) = today_file.read_entry(EntryLoc::Last)? {
+            if pre_key == cur_key {
+                today_file.update_count(pre_count + count, EntryLoc::Previous)?;
+            } else {
+                today_file.add_entry(cur_key, count)?;
+            }
         } else {
             today_file.add_entry(cur_key, count)?;
         }
-    } else {
-        today_file.add_entry(cur_key, count)?;
     }
 
-    Ok(global_count)
+    Ok(new_count)
 }
 
 fn main() -> Result<()> {
