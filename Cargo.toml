@@ -1,5 +1,5 @@
 [package]
-name = "muu"
+name = "keyr"
 version ="0.0.0-dev"
 authors = ["Thomas Letan <lthms@soap.coffee"]
 edition = "2018"
@@ -11,13 +11,12 @@ regex = "1"
 serde_json = "1"
 
 [lib]
-name = "mul"
-path = "mul/lib.rs"
+path = "keyr-lib/lib.rs"
 
 [[bin]]
-name = "muf"
-path = "muf/main.rs"
+name = "keyr-sync"
+path = "keyr-sync/main.rs"
 
 [[bin]]
-name = "mur"
-path = "mur/main.rs"
+name = "keyr-fmt"
+path = "keyr-fmt/main.rs"

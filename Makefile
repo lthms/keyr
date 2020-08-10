@@ -1,35 +1,35 @@
 BINDIR := bin
-MUD := ${BINDIR}/mud
-MUF := ${BINDIR}/muf
-MUR := ${BINDIR}/mur
+KEYRD := ${BINDIR}/keyrd
+KEYRF := ${BINDIR}/keyr-sync
+KEYRR := ${BINDIR}/keyr-fmt
 
 WARGS := -Wextra -Wpedantic -Wall
 LARGS := -l udev -linput
 
 .PHONY : clean build install
 
-build : ${MUD} ${MUF}
+build : ${KEYRD} ${KEYRF}
 
-${MUD} : mud/main.c
+${KEYRD} : keyrd/main.c
 	@mkdir -p ${BINDIR}
 	gcc $< -o $@ ${WARGS} ${LARGS}
 
-${MUF} ${MUR} ::
+${KEYRF} ${KEYRR} ::
 	cargo build --release
-	cp target/release/muf ${MUF}
-	cp target/release/mur ${MUR}
+	cp target/release/keyr-sync ${KEYRF}
+	cp target/release/keyr-fmt ${KEYRR}
 
 clean :
 	cargo clean
 	rm -rf bin/
 
 install :
-	cp ${MUD} /usr/local/bin
-	chmod a+s /usr/local/bin/mud
-	cp ${MUF} /usr/local/bin
-	cp ${MUR} /usr/local/bin
+	cp ${KEYRD} /usr/local/bin
+	chmod a+s /usr/local/bin/keyrd
+	cp ${KEYRF} /usr/local/bin
+	cp ${KEYRR} /usr/local/bin
 
 uninstall :
-	rm -rf /usr/local/bin/mud
-	rm -rf /usr/local/bin/muf
-	rm -rf /usr/local/bin/mur
+	rm -rf /usr/local/bin/keyrd
+	rm -rf /usr/local/bin/keyrf
+	rm -rf /usr/local/bin/keyrr

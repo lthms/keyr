@@ -9,9 +9,10 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#define KEYRD_SOCKET_PATH "/tmp/keyrd.socket"
 #define UNIX_PATH_MAX 108
 
-typedef uint32_t muu_count;
+typedef uint32_t keyrd_count;
 
 static int open_restricted (const char *path, int flags, void *data) {
 	int fd = open (path, flags);
@@ -28,7 +29,7 @@ const struct libinput_interface INTERFACE = {
 };
 
 // Creates a new `struct libinput', using the udev backend.
-struct libinput *muu_libinput_create () {
+struct libinput *keyrd_libinput_create () {
   struct udev *udev = NULL;
   struct libinput *li = NULL;
 
@@ -56,8 +57,8 @@ struct libinput *muu_libinput_create () {
   return NULL;
 }
 
-void muu_libinput_event_handle (struct libinput_event *lev,
-                                muu_count *state
+void keyrd_libinput_event_handle (struct libinput_event *lev,
+                                keyrd_count *state
                                 ) {
   enum libinput_event_type event_type = libinput_event_get_type (lev);
 
@@ -78,7 +79,7 @@ void muu_libinput_event_handle (struct libinput_event *lev,
   }
 }
 
-int muu_poll_libinput_events (struct libinput *li, muu_count *state) {
+int keyrd_poll_libinput_events (struct libinput *li, keyrd_count *state) {
   if (libinput_dispatch (li) != 0) {
     goto exit;
   }
@@ -86,7 +87,7 @@ int muu_poll_libinput_events (struct libinput *li, muu_count *state) {
   struct libinput_event *event = NULL;
 
   while ((event = libinput_get_event (li))) {
-    muu_libinput_event_handle (event, state);
+    keyrd_libinput_event_handle (event, state);
     libinput_event_destroy (event);
   }
 
@@ -96,10 +97,8 @@ int muu_poll_libinput_events (struct libinput *li, muu_count *state) {
   return -1;
 }
 
-#define MUU_SOCKET_PATH "/tmp/mud.socket"
-
 int main (void) {
-  muu_count state = 0;
+  keyrd_count state = 0;
   int ret = 0;
   struct libinput *li = NULL;
   int server_socket = -1;
@@ -108,7 +107,7 @@ int main (void) {
   umask (0111);
 
   // unix socket
-  unlink (MUU_SOCKET_PATH);
+  unlink (KEYRD_SOCKET_PATH);
 
   server_socket = socket (AF_UNIX, SOCK_STREAM, 0);
 
@@ -117,7 +116,7 @@ int main (void) {
   }
 
   struct sockaddr_un server_sockaddr =
-    { .sun_family = AF_UNIX, .sun_path = MUU_SOCKET_PATH };
+    { .sun_family = AF_UNIX, .sun_path = KEYRD_SOCKET_PATH };
 
   int len = sizeof(server_sockaddr);
 
@@ -132,7 +131,7 @@ int main (void) {
   }
 
   // libinput struct
-  li = muu_libinput_create ();
+  li = keyrd_libinput_create ();
 
   if (!li) {
     ret = 3;
@@ -154,7 +153,7 @@ int main (void) {
 
     // libinput case
     if ((pollfds[0].revents & POLLIN)) {
-      if (muu_poll_libinput_events (li, &state) != 0) {
+      if (keyrd_poll_libinput_events (li, &state) != 0) {
         ret = 5;
         goto exit;
       }
@@ -184,7 +183,7 @@ int main (void) {
   }
 
  exit:
-  unlink (MUU_SOCKET_PATH);
+  unlink (KEYRD_SOCKET_PATH);
   close (server_socket);
   libinput_unref (li);
   return ret;

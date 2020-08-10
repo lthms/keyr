@@ -136,7 +136,7 @@ impl DayFile {
 }
 
 fn data_path(name : &str) -> Result<PathBuf> {
-    let xdg_dirs = xdg::BaseDirectories::with_prefix("muu").unwrap();
+    let xdg_dirs = xdg::BaseDirectories::with_prefix("keyr").unwrap();
 
     xdg_dirs.place_config_file(name)
 }
@@ -167,7 +167,7 @@ pub fn parse_key(key : &str) -> Option<(u32, u32)> {
 }
 
 pub fn list_days() -> Result<Vec<Date<Utc>>> {
-    let xdg_dirs = xdg::BaseDirectories::with_prefix("muu").unwrap();
+    let xdg_dirs = xdg::BaseDirectories::with_prefix("keyr").unwrap();
     let mut res = vec![];
 
     for candidate in xdg_dirs.get_config_home().read_dir()? {

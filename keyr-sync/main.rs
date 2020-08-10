@@ -3,7 +3,7 @@ use std::io::{Result, Read};
 use std::os::unix::net::UnixStream;
 use std::fs::OpenOptions;
 
-use mul::{CounterFile, DayFile, GlobalFile, EntryLoc};
+use keyr::{CounterFile, DayFile, GlobalFile, EntryLoc};
 
 fn open_data_options() -> OpenOptions {
     OpenOptions::new()
@@ -13,8 +13,8 @@ fn open_data_options() -> OpenOptions {
         .clone()
 }
 
-fn muu_fetch() -> Result<u32> {
-    let mut stream = UnixStream::connect("/tmp/mud.socket")?;
+fn keyrd_fetch() -> Result<u32> {
+    let mut stream = UnixStream::connect("/tmp/keyrd.socket")?;
     let mut count_buff = [0u8; 4];
 
     stream.read_exact(&mut count_buff)?;
@@ -67,7 +67,7 @@ fn update_day_count(count : u32) -> Result<u32> {
 }
 
 fn main() -> Result<()> {
-    let count = muu_fetch()?;
+    let count = keyrd_fetch()?;
 
     let new_global_count = update_global_count(count)?;
     let today_count = update_day_count(count)?;
