@@ -45,7 +45,13 @@ struct libinput *keyrd_libinput_create () {
     goto exit;
   }
 
-  if (libinput_udev_assign_seat (li, "seat0") != 0) {
+  const char *xdg_seat = getenv ("XDG_SEAT");
+
+  if (xdg_seat == NULL) {
+    goto exit;
+  }
+
+  if (libinput_udev_assign_seat (li, xdg_seat) != 0) {
     goto exit;
   }
 
