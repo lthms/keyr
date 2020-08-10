@@ -1,8 +1,12 @@
 [package]
 name = "keyr"
-version ="0.0.0-dev"
+description = "A collection of tools for keeping track of your keystrokes"
+version = "0.0.0-dev"
+homepage = "https://sr.ht/~lthms/keyr"
 authors = ["Thomas Letan <lthms@soap.coffee"]
+repository = "https://git.sr.ht/~lthms/keyr"
 edition = "2018"
+license = "GPL-3.0-or-later"
 
 [dependencies]
 xdg = "2"
