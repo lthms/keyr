@@ -52,9 +52,13 @@ ExecStart=/usr/local/bin/keyrd
 WantedBy=sway-session.target
 ```
 
+Prior to starting this service, `systemctl --user import-environment`
+shall be run.
+
 `keyrd` does only one thing: it counts. It does not deal with
-persistence. This part is achieved by `keyr-sync`.  You need to
-execute `keyr-sync` regularly. If you use
+persistence. This part is achieved by `keyr-sync`.
+
+You need to execute `keyr-sync` regularly. If you use
 [waybar](https://github.com/Alexays/Waybar), you can use the `custom`
 module to that end.
 
