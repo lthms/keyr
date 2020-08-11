@@ -13,11 +13,16 @@ for **key**strokes **r**eporting).
 
 ### Building From Source
 
-In order to build keyr’s tools, you will need the following dependencies:
+You will need the following programs to build keyr binaries.
+
+  - make
+  - meson and ninja
+  - rustc and cargo
+
+Besides, keyrd requires the following runtime dependencies:
 
   - udev
   - libinput
-  - rustc and cargo
 
 You can build the project using `make`.
 

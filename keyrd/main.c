@@ -52,7 +52,7 @@ const struct libinput_interface INTERFACE = {
 };
 
 // Creates a new `struct libinput', using the udev backend.
-struct libinput *keyrd_libinput_create () {
+struct libinput *keyrd_libinput_create (void) {
   struct udev *udev = NULL;
   struct libinput *li = NULL;
 

@@ -1,35 +1,28 @@
-BINDIR := bin
-KEYRD := ${BINDIR}/keyrd
-KEYRF := ${BINDIR}/keyr-sync
-KEYRR := ${BINDIR}/keyr-fmt
+build : build-keyrd build-rust-bins
 
-WARGS := -Wextra -Wpedantic -Wall
-LARGS := -l udev -linput
+build/build.ninja :
+ifeq (,$(wildcard ./build/build.ninja))
+	meson build
+endif
 
-.PHONY : clean build install
+build-keyrd : build/build.ninja
+	ninja -C build
 
-build : ${KEYRD} ${KEYRF}
-
-${KEYRD} : keyrd/main.c
-	@mkdir -p ${BINDIR}
-	gcc $< -o $@ ${WARGS} ${LARGS}
-
-${KEYRF} ${KEYRR} ::
+build-rust-bins :
 	cargo build --release
-	cp target/release/keyr-sync ${KEYRF}
-	cp target/release/keyr-fmt ${KEYRR}
-
-clean :
-	cargo clean
-	rm -rf bin/
 
 install :
-	cp ${KEYRD} /usr/local/bin
+	cp build/keyrd /usr/local/bin
 	chmod a+s /usr/local/bin/keyrd
-	cp ${KEYRF} /usr/local/bin
-	cp ${KEYRR} /usr/local/bin
+	cp target/release/keyr-sync target/release/keyr-fmt /usr/local/bin
 
 uninstall :
 	rm -rf /usr/local/bin/keyrd
 	rm -rf /usr/local/bin/keyrf
 	rm -rf /usr/local/bin/keyrr
+
+clean :
+	ninja -C build clean
+	cargo clean
+
+.PHONY : clean build build-keyrd build-rust-bins install
