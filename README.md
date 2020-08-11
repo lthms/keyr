@@ -60,14 +60,15 @@ persistence. This part is achieved by `keyr-sync`.
 
 You need to execute `keyr-sync` regularly. If you use
 [waybar](https://github.com/Alexays/Waybar), you can use the `custom`
-module to that end.
+module to that end. In this case, `keyr-fmt` can be used to print a
+text in the bar.
 
 ```json
 {
     ...
-    "custom/muf": {
-        "exec": "keyr-sync",
-        "format" : "{}",
+    "custom/keyr": {
+        "exec": "keyr-sync; keyr-fmt --minimal --template '{today_count | num_format} today ({global_count | num_format} total)'",
+        "format" : "{} ⌨",
         "interval" : 5
     },
     ...

@@ -88,10 +88,8 @@ fn update_day_count(count : u32) -> Result<u32> {
 fn main() -> Result<()> {
     let count = keyrd_fetch()?;
 
-    let new_global_count = update_global_count(count)?;
-    let today_count = update_day_count(count)?;
-
-    println!("{} ({} today)", new_global_count, today_count);
+    update_global_count(count)?;
+    update_day_count(count)?;
 
     Ok(())
 }
