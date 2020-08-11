@@ -28,8 +28,8 @@
 #include <poll.h>
 #include <stdio.h>
 #include <sys/socket.h>
-#include <sys/un.h>
 #include <sys/stat.h>
+#include <sys/un.h>
 #include <unistd.h>
 
 #define KEYRD_SOCKET_PATH "/tmp/keyrd.socket"
@@ -38,12 +38,12 @@
 typedef uint32_t keyrd_count;
 
 static int open_restricted (const char *path, int flags, void *data) {
-	int fd = open (path, flags);
-	return fd < 0 ? -errno : fd;
+  int fd = open (path, flags);
+  return fd < 0 ? -errno : fd;
 }
 
 static void close_restricted (int fd, void *data) {
-	close (fd);
+  close (fd);
 }
 
 const struct libinput_interface INTERFACE = {
@@ -87,8 +87,8 @@ struct libinput *keyrd_libinput_create (void) {
 }
 
 void keyrd_libinput_event_handle (struct libinput_event *lev,
-                                keyrd_count *state
-                                ) {
+                                  keyrd_count *state
+                                  ) {
   enum libinput_event_type event_type = libinput_event_get_type (lev);
 
   if (event_type == LIBINPUT_EVENT_KEYBOARD_KEY) {
