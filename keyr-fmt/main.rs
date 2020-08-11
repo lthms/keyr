@@ -22,8 +22,70 @@
 use chrono::{Date, Utc};
 use std::io::Result;
 use std::fs::OpenOptions;
+use std::collections::HashMap;
 use serde_json::Value;
+use clap::{App, ArgMatches, ArgGroup};
 use keyr::{CounterFile, DayFile, GlobalFile, EntryLoc};
+use tinytemplate::TinyTemplate;
+use num_format::{ToFormattedString, SystemLocale};
+
+enum Output<'a> {
+    Json,
+    Template(&'a str),
+}
+
+enum Details {
+    Minimal,
+    Summary,
+    Full,
+}
+
+impl Details {
+    fn fetch(&self) -> Result<Value> {
+        let mut global = GlobalFile::open(options())?;
+        let count = global.read_global_count()?;
+
+        match self {
+            Details::Minimal => {
+                let date = Utc::now();
+                let mut today_file = DayFile::open(&date.date(), options())?;
+                let today_count = today_file.read_global_count()?;
+
+                Ok(json!({
+                    "global_count": count,
+                    "today_count": today_count,
+                }))
+            },
+            Details::Summary => {
+                let mut res = HashMap::new();
+
+                keyr::list_days()?
+                    .iter()
+                    .map(|date| day_summary(&mut res, date))
+                    .collect::<Result<Vec<_>>>()?;
+
+                Ok(json!({
+                    "global_count": count,
+                    "day_counts": res,
+                }))
+            }
+            Details::Full => {
+                let mut res : HashMap<i64, u32> = HashMap::new();
+
+                keyr::list_days()?
+                    .iter()
+                    .map(|date| day_full(&mut res, date))
+                    .collect::<Result<Vec<_>>>()?;
+
+                Ok(json!({
+                    "global_count": count,
+                    "minutes_count": res,
+                }))
+            },
+        }
+
+    }
+}
 
 fn options() -> OpenOptions {
     OpenOptions::new()
@@ -31,22 +93,27 @@ fn options() -> OpenOptions {
         .clone()
 }
 
-fn day_summary(date : &Date<Utc>) -> Result<Value> {
+fn day_summary(map : &mut HashMap<i64, u32>, date : &Date<Utc>) -> Result<()> {
     let mut day_file = DayFile::open(date, options())?;
-    let mut buff = vec![];
 
     let count = day_file.read_global_count()?;
+
+    map.insert(date.and_hms(23, 59, 59).timestamp(), count);
+
+    Ok(())
+}
+
+fn day_full(map : &mut HashMap<i64, u32>, date : &Date<Utc>) -> Result<()> {
+    let mut day_file = DayFile::open(date, options())?;
+
+    day_file.read_global_count()?;
 
     loop {
         if let Some((key, count)) = day_file.read_entry(EntryLoc::Next)? {
             if let Some((hour, minute)) = keyr::parse_key(&key) {
-                let time = date.and_hms(hour, minute, 0);
+                let time = date.and_hms(hour, minute, 59);
 
-                buff.push(json!({
-                    "time": time.to_rfc2822(),
-                    "count": count
-                }))
-
+                map.insert(time.timestamp(), count);
             } else {
                 break;
             }
@@ -55,26 +122,83 @@ fn day_summary(date : &Date<Utc>) -> Result<Value> {
         }
     }
 
-    Ok(json!({
-        "count": count,
-        "log": buff,
-    }))
+    Ok(())
+}
+
+fn get_app() -> App<'static, 'static> {
+    App::new("keyr-fmt")
+        .version("0.0.0-dev")
+        .author("Thomas Letan <lthms@soap.coffee")
+        .about("Format your keystrokes statistics")
+        .args_from_usage(
+            "--minimal 'The global counter and today’s counter'
+             --summary 'The global counter and the list of daily counters'
+             --full 'The global counter, and a recap minute per minute'
+             --template [string] 'A template to output the result'
+             --json 'Output the json as computed'")
+        .group(
+            ArgGroup::with_name("details")
+                .args(&["minimal", "summary", "full"])
+        )
+        .group(
+            ArgGroup::with_name("output")
+                .args(&["template", "json"])
+        )
+}
+
+fn get_cli_args<'a>(matches : &'a ArgMatches<'static>) -> (Details, Output<'a>) {
+    let details =
+        match (matches.is_present("summary"),
+               matches.is_present("full")) {
+            (true, _) => Details::Summary,
+            (_, true) => Details::Full,
+            (_, _)    => Details::Minimal,
+        };
+
+    let output =
+        match matches.value_of("template") {
+            Some(tmp) => Output::Template(tmp),
+            _         => Output::Json,
+        };
+
+    (details, output)
+}
+
+fn num_format_formatter(
+    val : &Value,
+    output : &mut String
+) -> tinytemplate::error::Result<()> {
+    match val {
+        Value::Number(x) if x.is_i64() => {
+            output.push_str(
+                &x.as_i64().unwrap()
+                    .to_formatted_string(&SystemLocale::default().unwrap())
+            );
+            Ok(())
+        },
+        _ => Err(tinytemplate::error::Error::GenericError {
+            msg : "`num_format' is for integers only".into(),
+        })
+    }
+
 }
 
 fn main() -> Result<()> {
-    let mut global = GlobalFile::open(options())?;
+    let app = get_app().get_matches();
+    let (details, output) = get_cli_args(&app);
 
-    let days_summaries = keyr::list_days()?
-        .iter()
-        .map(day_summary)
-        .collect::<Result<Vec<_>>>()?;
+    let res = details.fetch()?;
 
-    let res = json!({
-        "count": global.read_global_count()?,
-        "days": days_summaries,
-    });
+    match output {
+        Output::Json => println!("{}", res.to_string()),
+        Output::Template(tpl) => {
+            let mut tt = TinyTemplate::new();
+            tt.add_template("fmt", tpl).unwrap();
+            tt.add_formatter("num_format", num_format_formatter);
 
-    println!("{}", res.to_string());
+            println!("{}", tt.render("fmt", &res).unwrap());
+        },
+    }
 
     Ok(())
 }
