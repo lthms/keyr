@@ -64,3 +64,9 @@ module to that end.
     ...
 }
 ```
+
+## Credits
+
+keyrd could not have been written without [the source code of
+`wshowkeys`](https://git.sr.ht/~sircmpwn/wshowkeys), released under
+the terms of the GPLv3 by [Drew DeVault](https://drewdevault.com/).

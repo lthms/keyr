@@ -17,6 +17,10 @@
  * along with keyr.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+/* Note: This file can be seen as a heavily rewriting of
+   https://git.sr.ht/~sircmpwn/wshowkeys/tree/master/main.c, released under the
+   terms of the GPLv3. */
+
 #include <errno.h>
 #include <fcntl.h>
 #include <libinput.h>
