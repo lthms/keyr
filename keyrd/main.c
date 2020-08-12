@@ -55,6 +55,7 @@ const struct libinput_interface INTERFACE = {
 struct libinput *keyrd_libinput_create (void) {
   struct udev *udev = NULL;
   struct libinput *li = NULL;
+  const char *xdg_seat = getenv ("XDG_SEAT");
 
   udev = udev_new ();
 
@@ -68,13 +69,15 @@ struct libinput *keyrd_libinput_create (void) {
     goto exit;
   }
 
-  const char *xdg_seat = getenv ("XDG_SEAT");
+  const char *seat;
 
-  if (xdg_seat == NULL) {
-    goto exit;
+  if (xdg_seat != NULL) {
+    seat = xdg_seat;
+  } else {
+    seat = "seat0";
   }
 
-  if (libinput_udev_assign_seat (li, xdg_seat) != 0) {
+  if (libinput_udev_assign_seat (li, seat) != 0) {
     goto exit;
   }
 
