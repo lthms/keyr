@@ -1,0 +1,19 @@
+[package]
+name = "keyr-localstorage"
+description = "A collection of functions to store locally your keystrokes"
+version = "0.0.0-dev"
+homepage = "https://sr.ht/~lthms/keyr"
+authors = ["Thomas Letan <lthms@soap.coffee"]
+repository = "https://git.sr.ht/~lthms/keyr"
+edition = "2018"
+license = "GPL-3.0-or-later"
+
+[dependencies]
+xdg = "2"
+chrono = "0.4"
+diesel = { version = "1.4", features = ["sqlite"] }
+diesel_migrations = "1.4"
+
+[lib]
+name = "keyr_localstorage"
+path = "lib.rs"

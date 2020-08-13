@@ -1,6 +1,7 @@
 [workspace]
 members = [
   'keyr-lib',
+  'keyr-localstorage',
   'keyr-sync',
   'keyr-fmt',
 ]
