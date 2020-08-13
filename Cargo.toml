@@ -1,29 +1,6 @@
-[package]
-name = "keyr"
-description = "A collection of tools for keeping track of your keystrokes"
-version = "0.0.0-dev"
-homepage = "https://sr.ht/~lthms/keyr"
-authors = ["Thomas Letan <lthms@soap.coffee"]
-repository = "https://git.sr.ht/~lthms/keyr"
-edition = "2018"
-license = "GPL-3.0-or-later"
-
-[dependencies]
-xdg = "2"
-chrono = "0.4"
-regex = "1"
-serde_json = "1"
-tinytemplate = "1"
-clap = "2"
-num-format = { version = "0.4", features = ["with-system-locale"] }
-
-[lib]
-path = "keyr-lib/lib.rs"
-
-[[bin]]
-name = "keyr-sync"
-path = "keyr-sync/main.rs"
-
-[[bin]]
-name = "keyr-fmt"
-path = "keyr-fmt/main.rs"
+[workspace]
+members = [
+  'keyr-lib',
+  'keyr-sync',
+  'keyr-fmt',
+]

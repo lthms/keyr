@@ -1,0 +1,17 @@
+[package]
+name = "keyr-sync"
+description = "The keyr agent"
+version = "0.0.0-dev"
+homepage = "https://sr.ht/~lthms/keyr"
+authors = ["Thomas Letan <lthms@soap.coffee"]
+repository = "https://git.sr.ht/~lthms/keyr"
+edition = "2018"
+license = "GPL-3.0-or-later"
+
+[dependencies]
+chrono = "0.4"
+keyr-lib = { path = "../keyr-lib" }
+
+[[bin]]
+name = "keyr-sync"
+path = "main.rs"

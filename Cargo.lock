@@ -243,16 +243,32 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dc6f3ad7b9d11a0c00842ff8de1b60ee58661048eb8049ed33c73594f359d7e6"
 
 [[package]]
-name = "keyr"
+name = "keyr-fmt"
 version = "0.0.0-dev"
 dependencies = [
  "chrono",
  "clap",
+ "keyr-lib",
  "num-format",
- "regex",
  "serde_json",
  "tinytemplate",
+]
+
+[[package]]
+name = "keyr-lib"
+version = "0.0.0-dev"
+dependencies = [
+ "chrono",
+ "regex",
  "xdg",
+]
+
+[[package]]
+name = "keyr-sync"
+version = "0.0.0-dev"
+dependencies = [
+ "chrono",
+ "keyr-lib",
 ]
 
 [[package]]
