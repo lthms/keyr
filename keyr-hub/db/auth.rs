@@ -18,25 +18,26 @@
  */
 
 use anyhow::Result;
-use diesel::PgConnection;
-use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
+use diesel::prelude::*;
+use uuid::Uuid;
 
-embed_migrations!();
+pub struct UserId(pub i32);
 
-pub type PgConnectionManager = ConnectionManager<PgConnection>;
-pub type PgPool = Pool<PgConnectionManager>;
-pub type PgPooledConnection = PooledConnection<PgConnectionManager>;
+use crate::schema::tokens;
+use crate::db::pool::PgPooledConnection;
 
-// Create a pool of Postgresql connections. Run the migrations if necessary.
-pub fn build() -> Result<PgPool> {
-    let pool = Pool::builder()
-        .build(
-            PgConnectionManager::new(
-                "postgres://keyr-hub:@localhost/keyr-hub"
-            )
-        )?;
+pub fn generate_token(
+    conn : &PgPooledConnection,
+    user : UserId,
+) -> Result<Uuid> {
+    let token = Uuid::new_v4();
 
-    embedded_migrations::run(&pool.get()?)?;
+    diesel::insert_into(tokens::table)
+        .values(vec![
+            (tokens::user_id.eq(user.0),
+             tokens::token.eq(token.to_simple().to_string()))
+        ])
+        .execute(conn)?;
 
-    Ok(pool)
+    Ok(token)
 }

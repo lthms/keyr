@@ -18,10 +18,12 @@
  */
 
 #[macro_use] extern crate diesel_migrations;
+#[macro_use] extern crate diesel;
 
 use actix_web::{App, HttpServer};
 use anyhow::Result;
 
+pub mod schema;
 pub mod db;
 
 async fn run() -> Result<()> {

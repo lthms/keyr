@@ -14,6 +14,7 @@ r2d2 = "0.8"
 diesel = { version = "1.4", features = ["postgres", "chrono", "r2d2"] }
 diesel_migrations = "1.4"
 anyhow = "1.0"
+uuid = { version = "0.8", features = [ "v4" ] }
 
 [[bin]]
 name = "keyr-hub"
