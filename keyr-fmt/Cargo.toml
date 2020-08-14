@@ -9,7 +9,7 @@ edition = "2018"
 license = "GPL-3.0-or-later"
 
 [dependencies]
-keyr-lib = { path = "../keyr-lib" }
+keyr-localstorage = { path = "../keyr-localstorage" }
 chrono = "0.4"
 serde_json = "1"
 tinytemplate = "1"

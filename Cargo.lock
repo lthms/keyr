@@ -281,7 +281,7 @@ version = "0.0.0-dev"
 dependencies = [
  "chrono",
  "clap",
- "keyr-lib",
+ "keyr-localstorage",
  "num-format",
  "serde_json",
  "tinytemplate",
