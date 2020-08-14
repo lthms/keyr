@@ -1,5 +1,5 @@
 [package]
-name = "keyr-lib"
+name = "keyr-legacy"
 description = "A collection functions used by keyr-sync and keyr-fmt"
 version = "0.0.0-dev"
 homepage = "https://sr.ht/~lthms/keyr"
@@ -12,7 +12,8 @@ license = "GPL-3.0-or-later"
 xdg = "2"
 chrono = "0.4"
 regex = "1"
+keyr-localstorage = { path = "../keyr-localstorage" }
 
-[lib]
-name = "keyr"
-path = "lib.rs"
+[[bin]]
+name = "keyr-legacy"
+path = "main.rs"
