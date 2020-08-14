@@ -1,0 +1,20 @@
+[package]
+name = "keyr-hub"
+description = "The keyr hub"
+version = "0.0.0-dev"
+homepage = "https://sr.ht/~lthms/keyr"
+authors = ["Thomas Letan <lthms@soap.coffee"]
+repository = "https://git.sr.ht/~lthms/keyr"
+edition = "2018"
+license = "GPL-3.0-or-later"
+
+[dependencies]
+actix-web = "3.0.0-beta.1"
+r2d2 = "0.8"
+diesel = { version = "1.4", features = ["postgres", "chrono", "r2d2"] }
+diesel_migrations = "1.4"
+anyhow = "1.0"
+
+[[bin]]
+name = "keyr-hub"
+path = "main.rs"
