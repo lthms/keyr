@@ -172,6 +172,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3e2de9deab977a153492a1468d1b1c0662c1cf39e5ea87d0c060ecd59ef18d8c"
 dependencies = [
  "byteorder",
+ "chrono",
  "diesel_derives",
  "libsqlite3-sys",
 ]
@@ -311,6 +312,7 @@ version = "0.0.0-dev"
 dependencies = [
  "chrono",
  "keyr-lib",
+ "keyr-localstorage",
 ]
 
 [[package]]

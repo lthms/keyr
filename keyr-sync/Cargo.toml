@@ -11,6 +11,7 @@ license = "GPL-3.0-or-later"
 [dependencies]
 chrono = "0.4"
 keyr-lib = { path = "../keyr-lib" }
+keyr-localstorage = { path = "../keyr-localstorage" }
 
 [[bin]]
 name = "keyr-sync"

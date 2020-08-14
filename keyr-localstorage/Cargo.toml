@@ -11,7 +11,7 @@ license = "GPL-3.0-or-later"
 [dependencies]
 xdg = "2"
 chrono = "0.4"
-diesel = { version = "1.4", features = ["sqlite"] }
+diesel = { version = "1.4", features = ["sqlite", "chrono"] }
 diesel_migrations = "1.4"
 
 [lib]

@@ -91,5 +91,9 @@ fn main() -> Result<()> {
     update_global_count(count)?;
     update_day_count(count)?;
 
+    let conn = keyr_localstorage::get_database().unwrap();
+    keyr_localstorage::migrations::run_migrations(&conn).unwrap();
+    keyr_localstorage::upsert_hourly_count(&conn, count).unwrap();
+
     Ok(())
 }
