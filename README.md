@@ -67,7 +67,7 @@ text in the bar.
 {
     ...
     "custom/keyr": {
-        "exec": "keyr-sync; keyr-fmt --minimal --template '{today_count | num_format} today ({global_count | num_format} total)'",
+        "exec": "keyr-sync; keyr-fmt --template '{today_count | num_format} today ({global_count | num_format} total)'",
         "format" : "{} ⌨",
         "interval" : 5
     },
