@@ -9,7 +9,7 @@ use chrono::{DateTime, Utc, Timelike};
 mod schema;
 pub mod migrations;
 
-use schema::staging_area;
+use schema::staging_area as sa;
 
 fn get_current_hour() -> DateTime<Utc> {
     Utc::now()
@@ -31,25 +31,25 @@ pub fn upsert_hourly_count(conn : &SqliteConnection, count : u32) -> Result<u32,
 
     if count != 0 {
         conn.exclusive_transaction(|| {
-            let prev = staging_area::table
-                .select(staging_area::count)
-                .filter(staging_area::timestamp.eq(now))
+            let prev = sa::table
+                .select(sa::count)
+                .filter(sa::timestamp.eq(now))
                 .get_result::<i32>(conn)
                 .optional()?;
 
             if let Some(prev) = prev {
                 let new_count = prev + count as i32;
 
-                diesel::update(staging_area::table.find(now))
-                    .set(staging_area::count.eq(new_count))
+                diesel::update(sa::table.find(now))
+                    .set(sa::count.eq(new_count))
                     .execute(conn)?;
 
                 Ok(new_count as u32)
             } else {
-                diesel::insert_into(staging_area::table)
+                diesel::insert_into(sa::table)
                     .values(vec![
-                        (staging_area::timestamp.eq(now),
-                         staging_area::count.eq(count as i32)),
+                        (sa::timestamp.eq(now),
+                         sa::count.eq(count as i32)),
                     ])
                     .execute(conn)?;
 
