@@ -4,7 +4,7 @@
 use diesel::prelude::*;
 use diesel::result::Error;
 use diesel::sqlite::SqliteConnection;
-use chrono::{DateTime, Utc, Timelike};
+use chrono::{DateTime, Utc, Local, Timelike};
 
 mod schema;
 pub mod migrations;
@@ -24,6 +24,20 @@ pub fn get_database() -> ConnectionResult<SqliteConnection> {
     let path = xdg_dirs.place_config_file("localstorage.sqlite").unwrap();
 
     SqliteConnection::establish(&path.to_string_lossy())
+}
+
+pub fn get_today_count(conn : &SqliteConnection) -> Result<u64, Error> {
+    let today = Local::today()
+        .and_hms(0, 0, 0)
+        .naive_utc();
+
+    let count = sa::table
+        .select(diesel::dsl::sum(sa::count))
+        .filter(sa::timestamp.ge(today))
+        .first::<Option<i64>>(conn)?
+        .unwrap_or(0);
+
+    Ok(count as u64)
 }
 
 pub fn upsert_hourly_count(conn : &SqliteConnection, count : u32) -> Result<u32, Error> {
