@@ -27,6 +27,8 @@ use crate::pool::PgPooledConnection;
 pub struct UserId(i32);
 pub struct MaybeUserId(pub i32);
 
+pub struct Token(pub String);
+
 impl Into<UserId> for i32 {
     fn into(self) -> UserId {
         UserId(self)
@@ -92,7 +94,7 @@ fn create_user_in_transaction(
 pub fn generate_token(
     conn : &PgPooledConnection,
     user : MaybeUserId,
-) -> Result<Option<Uuid>> {
+) -> Result<Option<Token>> {
     conn.transaction(|| {
         if let Some(id) = user.validate(conn)? {
             Ok(Some(generate_token_in_transaction(conn, id)?))
@@ -107,15 +109,15 @@ pub fn generate_token(
 fn generate_token_in_transaction(
     conn : &PgPooledConnection,
     id : UserId,
-) -> Result<Uuid> {
-    let token = Uuid::new_v4();
+) -> Result<Token> {
+    let token = Uuid::new_v4().to_simple().to_string();
 
     diesel::insert_into(tokens::table)
         .values(vec![
             (tokens::user_id.eq(id.0),
-             tokens::token.eq(token.to_simple().to_string()))
+             tokens::token.eq(&token))
         ])
         .execute(conn)?;
 
-    Ok(token)
+    Ok(Token(token))
 }
