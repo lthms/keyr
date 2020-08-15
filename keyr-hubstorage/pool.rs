@@ -28,11 +28,13 @@ pub type PgPool = Pool<PgConnectionManager>;
 pub type PgPooledConnection = PooledConnection<PgConnectionManager>;
 
 // Create a pool of Postgresql connections. Run the migrations if necessary.
-pub fn build(path : &str) -> Result<PgPool> {
+pub fn build(path : &str, migrate : bool) -> Result<PgPool> {
     let pool = Pool::builder()
         .build(PgConnectionManager::new(path))?;
 
-    embedded_migrations::run(&pool.get()?)?;
+    if migrate {
+        embedded_migrations::run(&pool.get()?)?;
+    }
 
     Ok(pool)
 }

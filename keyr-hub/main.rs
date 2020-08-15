@@ -22,7 +22,7 @@ use anyhow::Result;
 use keyr_hubstorage as kbs;
 
 async fn run() -> Result<()> {
-    let pool = kbs::pool::build("postgres://keyr-hub:@localhost/keyr-hub")?;
+    let pool = kbs::pool::build("postgres://keyr-hub:@localhost/keyr-hub", true)?;
 
     HttpServer::new(move || App::new().data(pool.clone()))
         .bind("127.0.0.1:8080")?
