@@ -1,0 +1,20 @@
+[package]
+name = "keyr-hubstorage"
+description = "The keyr hub model and helper functions"
+version = "0.0.0-dev"
+homepage = "https://sr.ht/~lthms/keyr"
+authors = ["Thomas Letan <lthms@soap.coffee"]
+repository = "https://git.sr.ht/~lthms/keyr"
+edition = "2018"
+license = "GPL-3.0-or-later"
+
+[dependencies]
+r2d2 = "0.8"
+diesel = { version = "1.4", features = ["postgres", "chrono", "r2d2"] }
+diesel_migrations = "1.4"
+anyhow = "1.0"
+uuid = { version = "0.8", features = [ "v4" ] }
+
+[lib]
+name = "keyr_hubstorage"
+path = "lib.rs"
