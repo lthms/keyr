@@ -1039,6 +1039,15 @@ version = "0.0.0-dev"
 dependencies = [
  "actix-web",
  "anyhow",
+ "keyr-hubstorage",
+ "uuid",
+]
+
+[[package]]
+name = "keyr-hubstorage"
+version = "0.0.0-dev"
+dependencies = [
+ "anyhow",
  "diesel",
  "diesel_migrations",
  "r2d2",

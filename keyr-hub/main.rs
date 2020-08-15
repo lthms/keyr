@@ -17,17 +17,12 @@
  * along with keyr.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#[macro_use] extern crate diesel_migrations;
-#[macro_use] extern crate diesel;
-
 use actix_web::{App, HttpServer};
 use anyhow::Result;
-
-pub mod schema;
-pub mod db;
+use keyr_hubstorage as kbs;
 
 async fn run() -> Result<()> {
-    let pool = db::pool::build()?;
+    let pool = kbs::pool::build("postgres://keyr-hub:@localhost/keyr-hub")?;
 
     HttpServer::new(move || App::new().data(pool.clone()))
         .bind("127.0.0.1:8080")?

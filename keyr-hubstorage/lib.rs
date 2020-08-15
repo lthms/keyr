@@ -17,26 +17,9 @@
  * along with keyr.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use anyhow::Result;
-use diesel::PgConnection;
-use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
+#[macro_use] extern crate diesel_migrations;
+#[macro_use] extern crate diesel;
 
-embed_migrations!();
-
-pub type PgConnectionManager = ConnectionManager<PgConnection>;
-pub type PgPool = Pool<PgConnectionManager>;
-pub type PgPooledConnection = PooledConnection<PgConnectionManager>;
-
-// Create a pool of Postgresql connections. Run the migrations if necessary.
-pub fn build() -> Result<PgPool> {
-    let pool = Pool::builder()
-        .build(
-            PgConnectionManager::new(
-                "postgres://keyr-hub:@localhost/keyr-hub"
-            )
-        )?;
-
-    embedded_migrations::run(&pool.get()?)?;
-
-    Ok(pool)
-}
+pub mod schema;
+pub mod pool;
+pub mod users;

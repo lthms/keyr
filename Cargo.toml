@@ -1,6 +1,7 @@
 [workspace]
 members = [
   'keyr-fmt',
+  'keyr-hubstorage',
   'keyr-hub',
   'keyr-legacy',
   'keyr-localstorage',

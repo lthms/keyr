@@ -17,5 +17,22 @@
  * along with keyr.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pub mod pool;
-pub mod auth;
+use anyhow::Result;
+use diesel::PgConnection;
+use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
+
+embed_migrations!();
+
+pub type PgConnectionManager = ConnectionManager<PgConnection>;
+pub type PgPool = Pool<PgConnectionManager>;
+pub type PgPooledConnection = PooledConnection<PgConnectionManager>;
+
+// Create a pool of Postgresql connections. Run the migrations if necessary.
+pub fn build(path : &str) -> Result<PgPool> {
+    let pool = Pool::builder()
+        .build(PgConnectionManager::new(path))?;
+
+    embedded_migrations::run(&pool.get()?)?;
+
+    Ok(pool)
+}

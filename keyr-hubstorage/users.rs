@@ -24,7 +24,7 @@ use uuid::Uuid;
 pub struct UserId(pub i32);
 
 use crate::schema::tokens;
-use crate::db::pool::PgPooledConnection;
+use crate::pool::PgPooledConnection;
 
 pub fn generate_token(
     conn : &PgPooledConnection,
