@@ -121,3 +121,34 @@ fn generate_token_in_transaction(
 
     Ok(Token(token))
 }
+
+// Check whether or not a token is associated by a valid user. Needs to be
+// called from within a transaction.
+fn identify_user_by_token_in_transaction(
+    conn : &PgPooledConnection,
+    token : Token,
+) -> Result<Option<UserId>> {
+    let id = tokens::table
+        .select(tokens::user_id)
+        .filter(tokens::token.eq(token.0))
+        .get_result::<i32>(conn)
+        .optional()?;
+
+    Ok(id.map(|x| UserId(x)))
+}
+
+// Check whether or not a token is associated by a valid user. User existence
+// needs to be asserted again prior to actually using it.
+pub fn identify_user_by_token(
+    conn : &PgPooledConnection,
+    token : Token,
+) -> Result<Option<MaybeUserId>> {
+    conn.transaction(|| {
+        let id = identify_user_by_token_in_transaction(
+            conn,
+            token
+        )?;
+
+        Ok(id.map(|x| MaybeUserId(x.0)))
+    })
+}
