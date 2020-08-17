@@ -17,77 +17,25 @@
  * along with keyr.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use actix_web::{
-    App, HttpServer, FromRequest, HttpRequest, get,
+pub mod error;
+pub mod database;
+pub mod auth;
 
-    dev::Payload,
-    error::ResponseError,
-    http::StatusCode,
-    web::Data,
-};
-use futures::future::{Ready, ok, err};
-use thiserror::Error;
-use diesel::PgConnection;
-use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
-
-pub type PgConnectionManager = ConnectionManager<PgConnection>;
-pub type PgPool = Pool<PgConnectionManager>;
-pub type PgPooledConnection = PooledConnection<PgConnectionManager>;
+use actix_web::{App, HttpServer, get};
+use actix_web::web::Data;
 
 use keyr_hubstorage as kbs;
-use kbs::users::Token;
-use kbs::error::KeyrHubstorageError;
+use kbs::users::identify_user_by_token;
 
-#[derive(Error, Debug)]
-pub enum KeyrHubError {
-    #[error("Client trying to access a protected route without setting Keyr-Token header")]
-    MissingKeyrTokenHeader,
-    #[error("Client trying to access a protected route with an incorrect token")]
-    IncorrectToken,
-    #[error(transparent)]
-    Storage(#[from] KeyrHubstorageError),
-    #[error(transparent)]
-    Pool(#[from] r2d2::Error),
-    #[error(transparent)]
-    IO(#[from] std::io::Error),
-}
-
-impl ResponseError for KeyrHubError {
-    fn status_code(&self) -> StatusCode {
-        match self {
-            KeyrHubError::MissingKeyrTokenHeader => StatusCode::UNAUTHORIZED,
-            KeyrHubError::IncorrectToken => StatusCode::UNAUTHORIZED,
-            KeyrHubError::Storage(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            KeyrHubError::Pool(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            KeyrHubError::IO(_) => StatusCode::INTERNAL_SERVER_ERROR,
-        }
-    }
-}
-
-pub struct TokenHeader(Token);
-
-impl FromRequest for TokenHeader {
-    type Config = ();
-    type Error = KeyrHubError;
-    type Future = Ready<Result<TokenHeader, KeyrHubError>>;
-
-    fn from_request(req: &HttpRequest, _pl: &mut Payload) -> Self::Future {
-        if let Some(token) = req.headers().get("keyr-token") {
-            if let Ok(token) = token.to_str() {
-                ok(TokenHeader(Token(token.to_owned())))
-            } else {
-                err(KeyrHubError::IncorrectToken)
-            }
-        } else {
-            err(KeyrHubError::MissingKeyrTokenHeader)
-        }
-    }
-}
+use crate::error::KeyrHubError;
+use crate::database::{PgPool, create_pool};
+use crate::auth::TokenHeader;
 
 #[get("/whoami")]
 async fn index(pool : Data<PgPool>, tok : TokenHeader) -> Result<String, KeyrHubError> {
     let conn = pool.into_inner().get()?;
-    if let Some(_id) = kbs::users::identify_user_by_token(&conn, tok.0)? {
+
+    if let Some(_id) = identify_user_by_token(&conn, tok.as_token())? {
         Ok("yay".to_owned())
     } else {
         Err(KeyrHubError::IncorrectToken)
@@ -95,8 +43,7 @@ async fn index(pool : Data<PgPool>, tok : TokenHeader) -> Result<String, KeyrHub
 }
 
 async fn run() -> Result<(), KeyrHubError> {
-    let pool = Pool::builder()
-        .build(PgConnectionManager::new("postgres://keyr-hub:@localhost/keyr-hub"))?;
+    let pool = create_pool("postgres://keyr-hub:@localhost/keyr-hub")?;
 
     kbs::migrations::run(&pool.get()?)?;
 

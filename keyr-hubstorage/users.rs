@@ -27,6 +27,7 @@ use crate::schema::{users, tokens};
 struct UserId(i32);
 pub struct MaybeUserId(pub i32);
 
+#[derive(Clone)]
 pub struct Token(pub String);
 
 impl Into<UserId> for i32 {
@@ -131,12 +132,12 @@ where Conn : Connection<Backend = Pg> {
 // called from within a transaction.
 fn identify_user_by_token_in_transaction<Conn>(
     conn : &Conn,
-    token : Token,
+    token : &Token,
 ) -> Result<Option<UserId>>
 where Conn : Connection<Backend = Pg> {
     let id = tokens::table
         .select(tokens::user_id)
-        .filter(tokens::token.eq(token.0))
+        .filter(tokens::token.eq(&token.0))
         .get_result::<i32>(conn)
         .optional()?;
 
@@ -147,7 +148,7 @@ where Conn : Connection<Backend = Pg> {
 // needs to be asserted again prior to actually using it.
 pub fn identify_user_by_token<Conn>(
     conn : &Conn,
-    token : Token,
+    token : &Token,
 ) -> Result<Option<MaybeUserId>>
 where Conn : Connection<Backend = Pg> {
     conn.transaction(|| {
