@@ -9,10 +9,9 @@ edition = "2018"
 license = "GPL-3.0-or-later"
 
 [dependencies]
-r2d2 = "0.8"
 diesel = { version = "1.4", features = ["postgres", "chrono", "r2d2"] }
 diesel_migrations = "1.4"
-anyhow = "1.0"
+thiserror = "1.0"
 uuid = { version = "0.8", features = [ "v4" ] }
 
 [lib]

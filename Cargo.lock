@@ -296,12 +296,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "anyhow"
-version = "1.0.32"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b602bfe940d21c130f3895acd65221e8a61270debe89d628b9cb4e3ccb8569b"
-
-[[package]]
 name = "arc-swap"
 version = "0.4.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1038,8 +1032,11 @@ name = "keyr-hub"
 version = "0.0.0-dev"
 dependencies = [
  "actix-web",
- "anyhow",
+ "diesel",
+ "futures",
  "keyr-hubstorage",
+ "r2d2",
+ "thiserror",
  "uuid",
 ]
 
@@ -1047,10 +1044,9 @@ dependencies = [
 name = "keyr-hubstorage"
 version = "0.0.0-dev"
 dependencies = [
- "anyhow",
  "diesel",
  "diesel_migrations",
- "r2d2",
+ "thiserror",
  "uuid",
 ]
 

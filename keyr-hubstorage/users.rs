@@ -17,14 +17,14 @@
  * along with keyr.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use anyhow::Result;
 use diesel::prelude::*;
 use uuid::Uuid;
 
+use crate::error::Result;
 use crate::schema::{users, tokens};
 use crate::pool::PgPooledConnection;
 
-pub struct UserId(i32);
+struct UserId(i32);
 pub struct MaybeUserId(pub i32);
 
 pub struct Token(pub String);

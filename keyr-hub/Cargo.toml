@@ -10,8 +10,11 @@ license = "GPL-3.0-or-later"
 
 [dependencies]
 keyr-hubstorage = { path = "../keyr-hubstorage" }
+diesel = { version = "1.4", features = ["postgres", "chrono", "r2d2"] }
 actix-web = "3.0.0-beta.1"
-anyhow = "1.0"
+thiserror = "1"
+r2d2 = "0.8"
+futures = "*"
 uuid = { version = "0.8", features = [ "v4" ] }
 
 [[bin]]

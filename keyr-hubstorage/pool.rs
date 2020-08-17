@@ -17,9 +17,10 @@
  * along with keyr.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use anyhow::Result;
 use diesel::PgConnection;
 use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
+
+use crate::error::Result;
 
 embed_migrations!();
 
@@ -27,14 +28,8 @@ pub type PgConnectionManager = ConnectionManager<PgConnection>;
 pub type PgPool = Pool<PgConnectionManager>;
 pub type PgPooledConnection = PooledConnection<PgConnectionManager>;
 
-// Create a pool of Postgresql connections. Run the migrations if necessary.
-pub fn build(path : &str, migrate : bool) -> Result<PgPool> {
-    let pool = Pool::builder()
-        .build(PgConnectionManager::new(path))?;
+pub fn run_migrations(conn : &PgPooledConnection) -> Result<()> {
+    embedded_migrations::run(conn)?;
 
-    if migrate {
-        embedded_migrations::run(&pool.get()?)?;
-    }
-
-    Ok(pool)
+    Ok(())
 }

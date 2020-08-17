@@ -20,6 +20,7 @@
 #[macro_use] extern crate diesel_migrations;
 #[macro_use] extern crate diesel;
 
+pub mod error;
 pub mod schema;
 pub mod pool;
 pub mod users;
