@@ -1044,6 +1044,7 @@ dependencies = [
 name = "keyr-hubstorage"
 version = "0.0.0-dev"
 dependencies = [
+ "chrono",
  "diesel",
  "diesel_migrations",
  "thiserror",

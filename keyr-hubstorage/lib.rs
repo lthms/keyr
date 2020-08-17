@@ -23,4 +23,5 @@
 pub mod error;
 pub mod schema;
 pub mod users;
+pub mod stats;
 pub mod migrations;
