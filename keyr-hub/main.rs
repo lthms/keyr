@@ -27,10 +27,14 @@ use actix_web::{
 };
 use futures::future::{Ready, ok, err};
 use thiserror::Error;
-use diesel::r2d2::Pool;
+use diesel::PgConnection;
+use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
+
+pub type PgConnectionManager = ConnectionManager<PgConnection>;
+pub type PgPool = Pool<PgConnectionManager>;
+pub type PgPooledConnection = PooledConnection<PgConnectionManager>;
 
 use keyr_hubstorage as kbs;
-use kbs::pool::{PgConnectionManager, PgPool};
 use kbs::users::Token;
 use kbs::error::KeyrHubstorageError;
 
@@ -94,7 +98,7 @@ async fn run() -> Result<(), KeyrHubError> {
     let pool = Pool::builder()
         .build(PgConnectionManager::new("postgres://keyr-hub:@localhost/keyr-hub"))?;
 
-    kbs::pool::run_migrations(&pool.get()?)?;
+    kbs::migrations::run(&pool.get()?)?;
 
     HttpServer::new(
         move || App::new()

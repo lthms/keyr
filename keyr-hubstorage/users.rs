@@ -18,11 +18,11 @@
  */
 
 use diesel::prelude::*;
+use diesel::pg::Pg;
 use uuid::Uuid;
 
 use crate::error::Result;
 use crate::schema::{users, tokens};
-use crate::pool::PgPooledConnection;
 
 struct UserId(i32);
 pub struct MaybeUserId(pub i32);
@@ -37,10 +37,11 @@ impl Into<UserId> for i32 {
 
 impl MaybeUserId {
     // Needs to be run in a transaction. Ensure the user exists.
-    fn validate(
+    fn validate<Conn>(
         &self,
-        conn : &PgPooledConnection,
-    ) -> Result<Option<UserId>> {
+        conn : &Conn,
+    ) -> Result<Option<UserId>>
+    where Conn : Connection<Backend = Pg> {
         let id = users::table
             .select(users::id)
             .filter(users::id.eq(self.0))
@@ -53,10 +54,11 @@ impl MaybeUserId {
 
 // Create a new user with a given name. Check whether or not the name is
 // available before.
-pub fn create_user(
-    conn : &PgPooledConnection,
+pub fn create_user<Conn>(
+    conn : &Conn,
     name : String
-) -> Result<Option<MaybeUserId>> {
+) -> Result<Option<MaybeUserId>>
+where Conn : Connection<Backend = Pg> {
     conn.transaction(|| {
         let mid = create_user_in_transaction(conn, name)?;
 
@@ -66,10 +68,11 @@ pub fn create_user(
 
 // Create a new user with a given name. Check whether or not the name is
 // available before. This needs to be called from within a transaction.
-fn create_user_in_transaction(
-    conn : &PgPooledConnection,
+fn create_user_in_transaction<Conn>(
+    conn : &Conn,
     name : String
-) -> Result<Option<UserId>> {
+) -> Result<Option<UserId>>
+where Conn : Connection<Backend = Pg> {
     let prev = users::table
         .select(users::id)
         .filter(users::name.eq(&name))
@@ -91,10 +94,11 @@ fn create_user_in_transaction(
 
 // Generate a token for a user identified by a potential id. Returns None if the
 // user does not exists.
-pub fn generate_token(
-    conn : &PgPooledConnection,
+pub fn generate_token<Conn>(
+    conn : &Conn,
     user : MaybeUserId,
-) -> Result<Option<Token>> {
+) -> Result<Option<Token>>
+where Conn : Connection<Backend = Pg> {
     conn.transaction(|| {
         if let Some(id) = user.validate(conn)? {
             Ok(Some(generate_token_in_transaction(conn, id)?))
@@ -106,10 +110,11 @@ pub fn generate_token(
 
 // Generate a token for a user identified by an id whose existence has been
 // previously asserted. Needs to be called from within a transaction.
-fn generate_token_in_transaction(
-    conn : &PgPooledConnection,
+fn generate_token_in_transaction<Conn>(
+    conn : &Conn,
     id : UserId,
-) -> Result<Token> {
+) -> Result<Token>
+where Conn : Connection<Backend = Pg> {
     let token = Uuid::new_v4().to_simple().to_string();
 
     diesel::insert_into(tokens::table)
@@ -124,10 +129,11 @@ fn generate_token_in_transaction(
 
 // Check whether or not a token is associated by a valid user. Needs to be
 // called from within a transaction.
-fn identify_user_by_token_in_transaction(
-    conn : &PgPooledConnection,
+fn identify_user_by_token_in_transaction<Conn>(
+    conn : &Conn,
     token : Token,
-) -> Result<Option<UserId>> {
+) -> Result<Option<UserId>>
+where Conn : Connection<Backend = Pg> {
     let id = tokens::table
         .select(tokens::user_id)
         .filter(tokens::token.eq(token.0))
@@ -139,10 +145,11 @@ fn identify_user_by_token_in_transaction(
 
 // Check whether or not a token is associated by a valid user. User existence
 // needs to be asserted again prior to actually using it.
-pub fn identify_user_by_token(
-    conn : &PgPooledConnection,
+pub fn identify_user_by_token<Conn>(
+    conn : &Conn,
     token : Token,
-) -> Result<Option<MaybeUserId>> {
+) -> Result<Option<MaybeUserId>>
+where Conn : Connection<Backend = Pg> {
     conn.transaction(|| {
         let id = identify_user_by_token_in_transaction(
             conn,
