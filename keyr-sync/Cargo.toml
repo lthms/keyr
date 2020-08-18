@@ -11,6 +11,10 @@ license = "GPL-3.0-or-later"
 [dependencies]
 chrono = "0.4"
 keyr-localstorage = { path = "../keyr-localstorage" }
+keyr-types = { path = "../keyr-types" }
+clap = "2"
+anyhow = "1"
+reqwest = { version = "0.10", features = ["blocking", "json"] }
 
 [[bin]]
 name = "keyr-sync"

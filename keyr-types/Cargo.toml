@@ -1,0 +1,16 @@
+[package]
+name = "keyr-types"
+description = "Types used by keyr-sync and keyr-hub"
+version = "0.0.0-dev"
+homepage = "https://sr.ht/~lthms/keyr"
+authors = ["Thomas Letan <lthms@soap.coffee"]
+repository = "https://git.sr.ht/~lthms/keyr"
+edition = "2018"
+license = "GPL-3.0-or-later"
+
+[dependencies]
+serde = "1"
+
+[lib]
+name = "keyr_types"
+path = "lib.rs"

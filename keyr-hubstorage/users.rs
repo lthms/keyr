@@ -24,7 +24,10 @@ use uuid::Uuid;
 use crate::error::Result;
 use crate::schema::{users, tokens};
 
-pub(crate) struct UserId(pub(crate) i32);
+#[derive(Copy, Clone)]
+pub struct UserId(pub i32);
+
+#[derive(Copy, Clone)]
 pub struct MaybeUserId(pub i32);
 
 #[derive(Clone)]
@@ -38,7 +41,7 @@ impl Into<UserId> for i32 {
 
 impl MaybeUserId {
     // Needs to be run in a transaction. Ensure the user exists.
-    pub(crate) fn validate<Conn>(
+    pub fn validate<Conn>(
         &self,
         conn : &Conn,
     ) -> Result<Option<UserId>>
@@ -69,7 +72,7 @@ where Conn : Connection<Backend = Pg> {
 
 // Create a new user with a given name. Check whether or not the name is
 // available before. This needs to be called from within a transaction.
-pub(crate) fn create_user_in_transaction<Conn>(
+pub fn create_user_in_transaction<Conn>(
     conn : &Conn,
     name : String
 ) -> Result<Option<UserId>>
@@ -111,7 +114,7 @@ where Conn : Connection<Backend = Pg> {
 
 // Generate a token for a user identified by an id whose existence has been
 // previously asserted. Needs to be called from within a transaction.
-pub(crate) fn generate_token_in_transaction<Conn>(
+pub fn generate_token_in_transaction<Conn>(
     conn : &Conn,
     id : UserId,
 ) -> Result<Token>
@@ -130,7 +133,7 @@ where Conn : Connection<Backend = Pg> {
 
 // Check whether or not a token is associated by a valid user. Needs to be
 // called from within a transaction.
-pub(crate) fn identify_user_by_token_in_transaction<Conn>(
+pub fn identify_user_by_token_in_transaction<Conn>(
     conn : &Conn,
     token : &Token,
 ) -> Result<Option<UserId>>

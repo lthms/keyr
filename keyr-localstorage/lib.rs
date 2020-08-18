@@ -22,16 +22,20 @@
 
 use diesel::prelude::*;
 use diesel::result::Error;
-use diesel::sqlite::SqliteConnection;
+pub use diesel::sqlite::SqliteConnection;
 use diesel_migrations::RunMigrationsError;
-use chrono::{DateTime, Utc, Local, Timelike, Date, TimeZone};
+use chrono::{DateTime, Utc, Local, Timelike, Date, TimeZone, NaiveDateTime};
+
 use std::time::Duration;
+use std::collections::HashMap;
 
 mod schema;
 mod migrations;
 
 use schema::staging_area as sa;
 use schema::summary;
+
+use keyr_types::StagingArea;
 
 pub fn get_database() -> ConnectionResult<SqliteConnection> {
     let xdg_dirs = xdg::BaseDirectories::with_prefix("keyr").unwrap();
@@ -102,33 +106,31 @@ pub fn get_global_count(conn : &SqliteConnection) -> Result<u64, Error> {
     })
 }
 
-pub fn set_summary(
+pub fn set_summary_in_transaction(
     conn : &SqliteConnection,
     oldest : DateTime<Utc>,
     global_count : u64,
     today : DateTime<Utc>,
     today_count : u64
 ) -> Result<(), Error> {
-    transaction_retry(conn, &|| {
-        diesel::delete(summary::table)
-            .execute(conn)?;
+    diesel::delete(summary::table)
+        .execute(conn)?;
 
-        diesel::insert_into(summary::table)
-            .values(vec![
-                (summary::since.eq(oldest.naive_utc()),
-                 summary::count.eq(global_count as i64)),
-            ])
-            .execute(conn)?;
+    diesel::insert_into(summary::table)
+        .values(vec![
+            (summary::since.eq(oldest.naive_utc()),
+             summary::count.eq(global_count as i64)),
+        ])
+        .execute(conn)?;
 
-        diesel::insert_into(summary::table)
-            .values(vec![
-                (summary::since.eq(today.naive_utc()),
-                 summary::count.eq(today_count as i64)),
-            ])
-            .execute(conn)?;
+    diesel::insert_into(summary::table)
+        .values(vec![
+            (summary::since.eq(today.naive_utc()),
+             summary::count.eq(today_count as i64)),
+        ])
+        .execute(conn)?;
 
-        Ok(())
-    })
+    Ok(())
 }
 
 pub fn upsert_current_hour_count(conn : &SqliteConnection, count : u32) -> Result<u32, Error> {
@@ -189,5 +191,51 @@ pub fn migrate(conn : &SqliteConnection) -> Result<(), Error> {
                 _ => panic!("FIXME")
             }
         })
+    })
+}
+
+fn get_staging_area_in_transaction(
+    conn : &SqliteConnection,
+) -> Result<StagingArea, Error> {
+    let datas = sa::table
+        .select((sa::timestamp, sa::count))
+        .get_results::<(NaiveDateTime, i32)>(conn)?;
+
+    let mut sa = HashMap::new();
+
+    for (t, v) in datas.iter() {
+        sa.insert(t.timestamp(), *v as u32);
+    }
+
+    Ok(sa)
+}
+
+fn drop_staging_area_in_transaction(
+    conn : &SqliteConnection,
+) -> Result<(), Error> {
+    diesel::delete(sa::table).execute(conn)?;
+
+    Ok(())
+}
+
+pub fn commit<A, E, K>(
+    conn : &SqliteConnection,
+    k : K
+) -> Result<A, Error>
+where
+    K : Fn(StagingArea) -> Result<A, E> {
+    transaction_retry(conn, &|| {
+        let sa = get_staging_area_in_transaction(conn)?;
+
+        match k(sa) {
+            Ok(res) => {
+                drop_staging_area_in_transaction(conn)?;
+                Ok(res)
+            },
+            Err(_) => {
+                panic!() // FIXME
+            }
+
+        }
     })
 }
