@@ -2,7 +2,7 @@
 members = [
   'keyr-hub',
   'keyr-hubstorage',
-  'keyr-localstorage',
-  'keyr-sync',
+  'keyr-agent',
+  'keyr-agentstorage',
   'keyr-types'
 ]

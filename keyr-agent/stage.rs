@@ -22,8 +22,8 @@ use std::os::unix::net::UnixStream;
 
 use anyhow::Result;
 
-use keyr_localstorage as kls;
-use kls::SqliteConnection;
+use keyr_agentstorage as kas;
+use kas::SqliteConnection;
 
 fn keyrd_fetch() -> Result<u32> {
     let mut stream = UnixStream::connect("/tmp/keyrd.socket")?;
@@ -36,7 +36,7 @@ fn keyrd_fetch() -> Result<u32> {
 
 pub fn run(conn : &SqliteConnection) -> Result<()> {
     let count = keyrd_fetch()?;
-    kls::upsert_current_hour_count(conn, count)?;
+    kas::upsert_current_hour_count(conn, count)?;
 
     Ok(())
 }

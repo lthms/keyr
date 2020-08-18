@@ -21,8 +21,8 @@ use anyhow::Result;
 use chrono::{Utc, TimeZone, Local};
 use reqwest::blocking::Client;
 
-use keyr_localstorage as kls;
-use kls::SqliteConnection;
+use keyr_agentstorage as kas;
+use kas::SqliteConnection;
 use keyr_types::{Summary, SynchronizeRequest, StagingArea};
 
 fn commit_inner(
@@ -50,7 +50,7 @@ fn commit_inner(
     if resp.status().is_success() {
         let resp : Summary = resp.json()?;
 
-        kls::set_summary_in_transaction(
+        kas::set_summary_in_transaction(
             &conn,
             Utc.timestamp(resp.oldest_timestamp, 0),
             resp.global_count,
@@ -65,7 +65,7 @@ fn commit_inner(
 }
 
 pub fn run(conn : &SqliteConnection, url : &str, token : &str) -> Result<()> {
-    kls::commit(&conn, |sa| commit_inner(&conn, url, token, sa))?;
+    kas::commit(&conn, |sa| commit_inner(&conn, url, token, sa))?;
 
     Ok(())
 }

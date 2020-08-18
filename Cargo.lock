@@ -1115,6 +1115,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "keyr-agent"
+version = "0.0.0-dev"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "clap",
+ "keyr-agentstorage",
+ "keyr-types",
+ "num-format",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tinytemplate",
+ "toml",
+ "xdg",
+]
+
+[[package]]
+name = "keyr-agentstorage"
+version = "0.0.0-dev"
+dependencies = [
+ "chrono",
+ "diesel",
+ "diesel_migrations",
+ "keyr-types",
+]
+
+[[package]]
 name = "keyr-hub"
 version = "0.0.0-dev"
 dependencies = [
@@ -1141,34 +1169,6 @@ dependencies = [
  "keyr-types",
  "thiserror",
  "uuid",
-]
-
-[[package]]
-name = "keyr-localstorage"
-version = "0.0.0-dev"
-dependencies = [
- "chrono",
- "diesel",
- "diesel_migrations",
- "keyr-types",
-]
-
-[[package]]
-name = "keyr-sync"
-version = "0.0.0-dev"
-dependencies = [
- "anyhow",
- "chrono",
- "clap",
- "keyr-localstorage",
- "keyr-types",
- "num-format",
- "reqwest",
- "serde",
- "serde_json",
- "tinytemplate",
- "toml",
- "xdg",
 ]
 
 [[package]]

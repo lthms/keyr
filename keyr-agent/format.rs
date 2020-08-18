@@ -3,8 +3,8 @@ use serde_json::Value;
 use tinytemplate::TinyTemplate;
 use num_format::{ToFormattedString, SystemLocale};
 
-use keyr_localstorage as kls;
-use kls::SqliteConnection;
+use keyr_agentstorage as kas;
+use kas::SqliteConnection;
 
 use crate::cli::Output;
 
@@ -30,8 +30,8 @@ fn num_format_formatter(
 
 pub fn run(conn : &SqliteConnection, output : &Output) -> Result<()> {
     let res = json!({
-        "global_count": kls::get_global_count(&conn)?,
-        "today_count": kls::get_today_count(&conn)?,
+        "global_count": kas::get_global_count(&conn)?,
+        "today_count": kas::get_today_count(&conn)?,
     });
 
     match output {

@@ -21,7 +21,7 @@
 
 use anyhow::Result;
 
-use keyr_localstorage as kls;
+use keyr_agentstorage as kas;
 
 pub mod cli;
 pub mod config;
@@ -37,8 +37,8 @@ fn main() -> Result<()> {
     let xdg_dirs = xdg::BaseDirectories::with_prefix("keyr")?;
     let path = xdg_dirs.place_config_file("localstorage.sqlite")?;
 
-    let conn = kls::get_database(&path)?;
-    kls::migrate(&conn)?;
+    let conn = kas::get_database(&path)?;
+    kas::migrate(&conn)?;
 
     match matches.subcommand() {
         ("stage", _) => stage::run(&conn)?,

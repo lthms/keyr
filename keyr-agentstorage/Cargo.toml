@@ -1,5 +1,5 @@
 [package]
-name = "keyr-localstorage"
+name = "keyr-agentstorage"
 description = "A collection of functions to store locally your keystrokes"
 version = "0.0.0-dev"
 homepage = "https://sr.ht/~lthms/keyr"
@@ -16,5 +16,5 @@ diesel_migrations = "1.4"
 keyr-types = { path = "../keyr-types" }
 
 [lib]
-name = "keyr_localstorage"
+name = "keyr_agentstorage"
 path = "lib.rs"

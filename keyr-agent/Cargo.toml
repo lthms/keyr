@@ -1,5 +1,5 @@
 [package]
-name = "keyr-sync"
+name = "keyr-agent"
 description = "The keyr agent"
 version = "0.0.0-dev"
 homepage = "https://sr.ht/~lthms/keyr"
@@ -20,9 +20,9 @@ tinytemplate = "1"
 toml = "0.5"
 xdg = "2"
 
-keyr-localstorage = { path = "../keyr-localstorage" }
+keyr-agentstorage = { path = "../keyr-agentstorage" }
 keyr-types = { path = "../keyr-types" }
 
 [[bin]]
-name = "keyr-sync"
+name = "keyr-agent"
 path = "main.rs"
