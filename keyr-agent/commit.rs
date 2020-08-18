@@ -25,6 +25,8 @@ use keyr_agentstorage as kas;
 use kas::SqliteConnection;
 use keyr_types::{Summary, SynchronizeRequest, StagingArea};
 
+use crate::config::HubConfig;
+
 fn commit_inner(
     conn : &SqliteConnection,
     url : &str,
@@ -64,8 +66,13 @@ fn commit_inner(
     }
 }
 
-pub fn run(conn : &SqliteConnection, url : &str, token : &str) -> Result<()> {
-    kas::commit(&conn, |sa| commit_inner(&conn, url, token, sa))?;
+pub fn run(conn : &SqliteConnection, hub : &HubConfig) -> Result<()> {
+    kas::commit(&conn, |sa| commit_inner(
+        &conn,
+        &hub.hub_url,
+        &hub.api_token,
+        sa
+    ))?;
 
     Ok(())
 }

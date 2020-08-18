@@ -18,6 +18,7 @@
  */
 
 #[macro_use] extern crate serde_json;
+#[macro_use] extern crate anyhow;
 
 use anyhow::Result;
 
@@ -30,26 +31,20 @@ pub mod commit;
 pub mod format;
 
 use crate::cli::Output;
+use crate::config::AgentConfig;
 
 fn main() -> Result<()> {
+    let conf = AgentConfig::from_xdg()?;
+
     let matches = cli::get_app().get_matches();
 
-    let xdg_dirs = xdg::BaseDirectories::with_prefix("keyr")?;
-    let path = xdg_dirs.place_config_file("localstorage.sqlite")?;
-
-    let conn = kas::get_database(&path)?;
+    let conn = kas::get_database(&conf.local_config()?.database_path)?;
     kas::migrate(&conn)?;
 
     match matches.subcommand() {
         ("stage", _) => stage::run(&conn)?,
-        ("commit", Some(m)) => {
-            let url = m.value_of("url").unwrap();
-            let token = m.value_of("token").unwrap();
-
-            commit::run(&conn, url, token)?;
-        },
-        ("format", Some(m)) =>
-            format::run(&conn, &Output::from_matches(m))?,
+        ("commit", Some(_)) => commit::run(&conn, &conf.hub_config()?)?,
+        ("format", Some(m)) => format::run(&conn, &Output::from_matches(m))?,
         _ => println!("nothing to do"),
     }
 

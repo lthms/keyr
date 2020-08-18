@@ -17,7 +17,7 @@
  * along with keyr.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use clap::{App, SubCommand, Arg, ArgGroup, ArgMatches};
+use clap::{App, SubCommand, ArgGroup, ArgMatches};
 
 pub enum Output<'a> {
     Json,
@@ -36,12 +36,6 @@ pub fn get_app() -> App<'static, 'static> {
         .subcommand(
             SubCommand::with_name("commit")
                 .about("Push staging keystrokes to a hub")
-                .arg(Arg::with_name("url")
-                     .required(true)
-                     .index(1))
-                .arg(Arg::with_name("token")
-                     .required(true)
-                     .index(2))
         )
         .subcommand(
             SubCommand::with_name("format")
