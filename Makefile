@@ -14,12 +14,11 @@ build-rust-bins :
 install :
 	cp build/keyrd /usr/local/bin
 	chmod a+s /usr/local/bin/keyrd
-	cp target/release/keyr-sync target/release/keyr-fmt /usr/local/bin
+	cp target/release/keyr-sync /usr/local/bin
 
 uninstall :
 	rm -rf /usr/local/bin/keyrd
-	rm -rf /usr/local/bin/keyrf
-	rm -rf /usr/local/bin/keyrr
+	rm -rf /usr/local/bin/keyr-sync
 
 clean :
 	ninja -C build clean

@@ -1115,18 +1115,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "keyr-fmt"
-version = "0.0.0-dev"
-dependencies = [
- "chrono",
- "clap",
- "keyr-localstorage",
- "num-format",
- "serde_json",
- "tinytemplate",
-]
-
-[[package]]
 name = "keyr-hub"
 version = "0.0.0-dev"
 dependencies = [
@@ -1163,7 +1151,6 @@ dependencies = [
  "diesel",
  "diesel_migrations",
  "keyr-types",
- "xdg",
 ]
 
 [[package]]
@@ -1175,7 +1162,13 @@ dependencies = [
  "clap",
  "keyr-localstorage",
  "keyr-types",
+ "num-format",
  "reqwest",
+ "serde",
+ "serde_json",
+ "tinytemplate",
+ "toml",
+ "xdg",
 ]
 
 [[package]]
@@ -2242,6 +2235,15 @@ dependencies = [
  "log",
  "pin-project-lite",
  "tokio",
+]
+
+[[package]]
+name = "toml"
+version = "0.5.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ffc92d160b1eef40665be3a05630d003936a3bc7da7421277846c2613e92c71a"
+dependencies = [
+ "serde",
 ]
 
 [[package]]

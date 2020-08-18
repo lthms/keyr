@@ -28,6 +28,7 @@ use chrono::{DateTime, Utc, Local, Timelike, Date, TimeZone, NaiveDateTime};
 
 use std::time::Duration;
 use std::collections::HashMap;
+use std::path::Path;
 
 mod schema;
 mod migrations;
@@ -37,11 +38,7 @@ use schema::summary;
 
 use keyr_types::StagingArea;
 
-pub fn get_database() -> ConnectionResult<SqliteConnection> {
-    let xdg_dirs = xdg::BaseDirectories::with_prefix("keyr").unwrap();
-
-    let path = xdg_dirs.place_config_file("localstorage.sqlite").unwrap();
-
+pub fn get_database(path : &Path) -> ConnectionResult<SqliteConnection> {
     SqliteConnection::establish(&path.to_string_lossy())
 }
 
