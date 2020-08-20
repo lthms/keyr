@@ -1,9 +1,12 @@
-build : build-keyr-daemon build-rust-bins
+build : build-keyr-daemon build-rust-bins build-refman
 
 build/build.ninja :
 ifeq (,$(wildcard ./build/build.ninja))
 	meson build
 endif
+
+build-refman :
+	mdbook build
 
 build-keyr-daemon : build/build.ninja
 	ninja -C build
@@ -24,4 +27,4 @@ clean :
 	ninja -C build clean
 	cargo clean
 
-.PHONY : clean build build-keyr-daemon build-rust-bins install
+.PHONY : clean build build-keyr-daemon build-rust-bins build-refman install
