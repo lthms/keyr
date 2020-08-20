@@ -5,9 +5,11 @@
 A collection of tools to keep track of your keystrokes (keyr stands
 for **key**strokes **r**eporting).
 
-  - `keyrd` (keyr daemon) counts your keystrokes
-  - `keyr-sync` maintains a detailed log of your keystrokes statistics
-  - `keyr-fmt` outputs said log to the standard output (json)
+  - `keyr-daemon` counts your keystrokes
+  - `keyr-hub` allows for synchronizing your keystrokes count among
+    several computers
+  - `keyr-agent` maintains a detailed log of your keystrokes statistics locally,
+    and can communicate `keyr-hub`
 
 ## Getting Started
 
@@ -41,12 +43,12 @@ You can manage it as a user systemd service.
 
 ```
 [Unit]
-Description=keyrd - the keyr daemon
+Description=keyr-daemon
 PartOf=graphical-session.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/keyrd
+ExecStart=/usr/local/bin/keyr-daemon
 
 [Install]
 WantedBy=sway-session.target
@@ -56,18 +58,18 @@ Prior to starting this service, `systemctl --user import-environment`
 shall be run.
 
 `keyrd` does only one thing: it counts. It does not deal with
-persistence. This part is achieved by `keyr-sync`.
+persistence. This part is achieved by `keyr-agent`.
 
-You need to execute `keyr-sync` regularly. If you use
+You need to execute `keyr-agent` regularly. If you use
 [waybar](https://github.com/Alexays/Waybar), you can use the `custom`
-module to that end. In this case, `keyr-fmt` can be used to print a
+module to that end. In this case, `keyr-agent` can be used to print a
 text in the bar.
 
 ```json
 {
     ...
     "custom/keyr": {
-        "exec": "keyr-sync; keyr-fmt --template '{today_count | num_format} today ({global_count | num_format} total)'",
+        "exec": "keyr-agent stage; keyr-agent format --template '{today_count | num_format} today ({global_count | num_format} total)'",
         "format" : "{} ⌨",
         "interval" : 5
     },
