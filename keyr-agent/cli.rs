@@ -25,7 +25,7 @@ pub enum Output<'a> {
 }
 
 pub fn get_app() -> App<'static, 'static> {
-    App::new("keyr-sync")
+    App::new("keyr-agent")
         .version("0.0.0-dev")
         .author("Thomas Letan <lthms@soap.coffee")
         .about("Synchronize your keystrokes locally and remotely")
