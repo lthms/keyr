@@ -1149,6 +1149,7 @@ dependencies = [
  "actix-web",
  "anyhow",
  "chrono",
+ "clap",
  "diesel",
  "futures",
  "keyr-hubstorage",

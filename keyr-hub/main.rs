@@ -21,6 +21,7 @@ pub mod error;
 pub mod database;
 pub mod auth;
 pub mod config;
+pub mod cli;
 
 use actix_web::{App, HttpServer, post};
 use actix_web::web::{Json, Data};
@@ -61,7 +62,11 @@ async fn sync(
 }
 
 async fn run() -> anyhow::Result<()> {
-    let conf = HubConfig::from_file(&PathBuf::from("keyr-hub.toml"))?;
+    let matches = cli::get_app().get_matches();
+
+    // unwrap is valid since `config_file' is required
+    let conf_path = matches.value_of("config_file").unwrap();
+    let conf = HubConfig::from_file(&PathBuf::from(conf_path))?;
 
     let pool = create_pool(&conf.database_url())?;
 
