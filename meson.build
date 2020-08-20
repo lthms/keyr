@@ -30,8 +30,8 @@ add_project_arguments(cc.get_supported_arguments([
 ]), language: 'c')
 
 executable(
-  'keyrd',
-  files('keyrd/main.c'),
+  'keyr-daemon',
+  files('keyr-daemon/main.c'),
   dependencies: [
     dependency('libinput'),
     dependency('libudev'),
