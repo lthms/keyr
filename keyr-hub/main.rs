@@ -20,10 +20,13 @@
 pub mod error;
 pub mod database;
 pub mod auth;
+pub mod config;
 
 use actix_web::{App, HttpServer, post};
 use actix_web::web::{Json, Data};
 use chrono::{Utc, TimeZone};
+
+use std::path::PathBuf;
 
 use keyr_hubstorage as khs;
 use khs::users::identify_user_by_token;
@@ -33,6 +36,7 @@ use keyr_types::{SynchronizeRequest, Summary};
 use crate::error::KeyrHubError;
 use crate::database::{PgPool, create_pool};
 use crate::auth::TokenHeader;
+use crate::config::HubConfig;
 
 #[post("/sync")]
 async fn sync(
@@ -56,8 +60,10 @@ async fn sync(
     }
 }
 
-async fn run() -> Result<(), KeyrHubError> {
-    let pool = create_pool("postgres://keyr-hub:@localhost/keyr-hub")?;
+async fn run() -> anyhow::Result<()> {
+    let conf = HubConfig::from_file(&PathBuf::from("keyr-hub.toml"))?;
+
+    let pool = create_pool(&conf.database_url())?;
 
     khs::migrations::run(&pool.get()?)?;
 
