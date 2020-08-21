@@ -21,7 +21,7 @@ use diesel::prelude::*;
 use diesel::pg::Pg;
 use uuid::Uuid;
 
-use crate::error::Result;
+use crate::error::{KeyrHubstorageError, Result};
 use crate::schema::{users, tokens};
 
 #[derive(Copy, Clone)]
@@ -44,7 +44,7 @@ impl MaybeUserId {
     pub fn validate<Conn>(
         &self,
         conn : &Conn,
-    ) -> Result<Option<UserId>>
+    ) -> Result<UserId>
     where Conn : Connection<Backend = Pg> {
         let id = users::table
             .select(users::id)
@@ -52,7 +52,8 @@ impl MaybeUserId {
             .get_result::<i32>(conn)
             .optional()?;
 
-        Ok(id.map(|x| UserId(x)))
+        id.map(|x| UserId(x))
+            .ok_or(KeyrHubstorageError::UnknownUser)
     }
 }
 
@@ -61,12 +62,11 @@ impl MaybeUserId {
 pub fn create_user<Conn>(
     conn : &Conn,
     name : String
-) -> Result<Option<MaybeUserId>>
+) -> Result<MaybeUserId>
 where Conn : Connection<Backend = Pg> {
     conn.transaction(|| {
-        let mid = create_user_in_transaction(conn, name)?;
-
-        Ok(mid.map(|x| MaybeUserId(x.0)))
+        create_user_in_transaction(conn, name)
+            .map(|x| MaybeUserId(x.0))
     })
 }
 
@@ -75,7 +75,7 @@ where Conn : Connection<Backend = Pg> {
 pub fn create_user_in_transaction<Conn>(
     conn : &Conn,
     name : String
-) -> Result<Option<UserId>>
+) -> Result<UserId>
 where Conn : Connection<Backend = Pg> {
     let prev = users::table
         .select(users::id)
@@ -90,9 +90,9 @@ where Conn : Connection<Backend = Pg> {
             .returning(users::id)
             .get_result::<i32>(conn)?;
 
-        Ok(Some(UserId(id)))
+        Ok(UserId(id))
     } else {
-        Ok(None)
+        Err(KeyrHubstorageError::AlreadyUsedNickname(name))
     }
 }
 
@@ -101,14 +101,12 @@ where Conn : Connection<Backend = Pg> {
 pub fn generate_token<Conn>(
     conn : &Conn,
     user : MaybeUserId,
-) -> Result<Option<Token>>
+) -> Result<Token>
 where Conn : Connection<Backend = Pg> {
     conn.transaction(|| {
-        if let Some(id) = user.validate(conn)? {
-            Ok(Some(generate_token_in_transaction(conn, id)?))
-        } else {
-            Ok(None)
-        }
+        let id = user.validate(conn)?;
+
+        Ok(generate_token_in_transaction(conn, id)?)
     })
 }
 
@@ -136,7 +134,7 @@ where Conn : Connection<Backend = Pg> {
 pub fn identify_user_by_token_in_transaction<Conn>(
     conn : &Conn,
     token : &Token,
-) -> Result<Option<UserId>>
+) -> Result<UserId>
 where Conn : Connection<Backend = Pg> {
     let id = tokens::table
         .select(tokens::user_id)
@@ -144,7 +142,8 @@ where Conn : Connection<Backend = Pg> {
         .get_result::<i32>(conn)
         .optional()?;
 
-    Ok(id.map(|x| UserId(x)))
+    id.map(|x| UserId(x))
+        .ok_or(KeyrHubstorageError::InvalidToken)
 }
 
 // Check whether or not a token is associated by a valid user. User existence
@@ -152,14 +151,84 @@ where Conn : Connection<Backend = Pg> {
 pub fn identify_user_by_token<Conn>(
     conn : &Conn,
     token : &Token,
-) -> Result<Option<MaybeUserId>>
+) -> Result<MaybeUserId>
 where Conn : Connection<Backend = Pg> {
     conn.transaction(|| {
-        let id = identify_user_by_token_in_transaction(
+        identify_user_by_token_in_transaction(
             conn,
             token
-        )?;
+        ).map(|x| MaybeUserId(x.0))
+    })
+}
 
-        Ok(id.map(|x| MaybeUserId(x.0)))
+pub fn freeze_user_in_transaction<Conn>(
+    conn : &Conn,
+    id : UserId,
+) -> Result<()>
+where Conn : Connection<Backend = Pg> {
+    diesel::update(users::table.find(id.0))
+        .set(users::frozen.eq(true))
+        .execute(conn)?;
+
+    Ok(())
+}
+
+pub fn is_frozen_in_transaction<Conn>(
+    conn : &Conn,
+    id : UserId,
+) -> Result<bool>
+where Conn : Connection<Backend = Pg> {
+    let res = users::table
+        .filter(users::id.eq(id.0))
+        .select(users::frozen)
+        .get_result::<bool>(conn)?;
+
+    Ok(res)
+}
+
+pub fn is_frozen<Conn>(
+    conn : &Conn,
+    id : MaybeUserId,
+) -> Result<bool>
+where Conn : Connection<Backend = Pg> {
+    conn.transaction(|| {
+        let id = id.validate(conn)?;
+
+        is_frozen_in_transaction(conn, id)
+    })
+}
+
+pub fn freeze_user<Conn>(
+    conn : &Conn,
+    mid : MaybeUserId,
+) -> Result<()>
+where Conn : Connection<Backend = Pg> {
+    conn.transaction(|| {
+        let id = mid.validate(conn)?;
+
+        freeze_user_in_transaction(conn, id)
+    })
+}
+
+pub fn unfreeze_user_in_transaction<Conn>(
+    conn : &Conn,
+    id : UserId,
+) -> Result<()>
+where Conn : Connection<Backend = Pg> {
+    diesel::update(users::table.find(id.0))
+        .set(users::frozen.eq(false))
+        .execute(conn)?;
+
+    Ok(())
+}
+
+pub fn unfreeze_user<Conn>(
+    conn : &Conn,
+    mid : MaybeUserId,
+) -> Result<()>
+where Conn : Connection<Backend = Pg> {
+    conn.transaction(|| {
+        let id = mid.validate(conn)?;
+        unfreeze_user_in_transaction(conn, id)
     })
 }

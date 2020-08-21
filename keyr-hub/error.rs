@@ -28,8 +28,6 @@ use kbs::error::KeyrHubstorageError;
 pub enum KeyrHubError {
     #[error("Client trying to access a protected route without setting Keyr-Token header")]
     MissingKeyrTokenHeader,
-    #[error("Client trying to access a protected route with an incorrect token")]
-    IncorrectToken,
     #[error(transparent)]
     Storage(#[from] KeyrHubstorageError),
     #[error(transparent)]
@@ -44,7 +42,12 @@ impl ResponseError for KeyrHubError {
     fn status_code(&self) -> StatusCode {
         match self {
             KeyrHubError::MissingKeyrTokenHeader => StatusCode::UNAUTHORIZED,
-            KeyrHubError::IncorrectToken => StatusCode::UNAUTHORIZED,
+            KeyrHubError::Storage(KeyrHubstorageError::InvalidToken) =>
+                StatusCode::UNAUTHORIZED,
+            KeyrHubError::Storage(KeyrHubstorageError::UnknownUser) =>
+                StatusCode::BAD_REQUEST,
+            KeyrHubError::Storage(KeyrHubstorageError::AlreadyUsedNickname(_)) =>
+                StatusCode::BAD_REQUEST,
             KeyrHubError::Storage(_) => StatusCode::INTERNAL_SERVER_ERROR,
             KeyrHubError::Pool(_) => StatusCode::INTERNAL_SERVER_ERROR,
             KeyrHubError::IO(_) => StatusCode::INTERNAL_SERVER_ERROR,

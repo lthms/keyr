@@ -26,6 +26,7 @@ pub use diesel::sqlite::SqliteConnection;
 use diesel_migrations::RunMigrationsError;
 use chrono::{DateTime, Utc, Local, Timelike, Date, TimeZone, NaiveDateTime};
 
+use std::fmt::Display;
 use std::time::Duration;
 use std::collections::HashMap;
 use std::path::Path;
@@ -36,7 +37,7 @@ mod migrations;
 use schema::staging_area as sa;
 use schema::summary;
 
-use keyr_types::StagingArea;
+use keyr_types::KeystrokesStats;
 
 pub fn get_database(path : &Path) -> ConnectionResult<SqliteConnection> {
     SqliteConnection::establish(&path.to_string_lossy())
@@ -44,8 +45,13 @@ pub fn get_database(path : &Path) -> ConnectionResult<SqliteConnection> {
 
 // Helper to perform atomic transactions concurrently. We try as many time as
 // necessary.
-fn transaction_retry<A, F>(conn : &SqliteConnection, f : &F) -> Result<A, Error>
-where F : Fn() -> Result<A, Error> {
+pub fn transaction_retry<A, E, F>(
+    conn : &SqliteConnection,
+    f : &F,
+) -> Result<A, E>
+where
+    E : From<Error> + Display,
+    F : Fn() -> Result<A, E>, {
     loop {
         match conn.exclusive_transaction(f) {
             Err(err) => {
@@ -101,6 +107,15 @@ pub fn get_global_count(conn : &SqliteConnection) -> Result<u64, Error> {
 
         Ok((staging_count + summary_count) as u64)
     })
+}
+
+pub fn drop_summary(
+    conn : &SqliteConnection,
+) -> Result<(), Error> {
+    diesel::delete(summary::table)
+        .execute(conn)?;
+
+    Ok(())
 }
 
 pub fn set_summary_in_transaction(
@@ -193,7 +208,7 @@ pub fn migrate(conn : &SqliteConnection) -> Result<(), Error> {
 
 fn get_staging_area_in_transaction(
     conn : &SqliteConnection,
-) -> Result<StagingArea, Error> {
+) -> Result<KeystrokesStats, Error> {
     let datas = sa::table
         .select((sa::timestamp, sa::count))
         .get_results::<(NaiveDateTime, i32)>(conn)?;
@@ -220,7 +235,7 @@ pub fn commit<A, E, K>(
     k : K
 ) -> Result<A, Error>
 where
-    K : Fn(StagingArea) -> Result<A, E> {
+    K : Fn(KeystrokesStats) -> Result<A, E> {
     transaction_retry(conn, &|| {
         let sa = get_staging_area_in_transaction(conn)?;
 

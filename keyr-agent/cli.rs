@@ -38,6 +38,10 @@ pub fn get_app() -> App<'static, 'static> {
                 .about("Push staging keystrokes to a hub")
         )
         .subcommand(
+            SubCommand::with_name("revert")
+                .about("Retreive keystrokes from a hub")
+        )
+        .subcommand(
             SubCommand::with_name("format")
                 .about("Format your keystrokes statistics")
                 .args_from_usage(

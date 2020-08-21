@@ -23,7 +23,7 @@ use reqwest::blocking::Client;
 
 use keyr_agentstorage as kas;
 use kas::SqliteConnection;
-use keyr_types::{Summary, SynchronizeRequest, StagingArea};
+use keyr_types::{Summary, SynchronizeRequest, KeystrokesStats};
 
 use crate::config::HubConfig;
 
@@ -31,7 +31,7 @@ fn commit_inner(
     conn : &SqliteConnection,
     url : &str,
     token : &str,
-    sa : StagingArea
+    sa : KeystrokesStats
 ) -> Result<()> {
     let client = Client::new();
 
@@ -44,7 +44,7 @@ fn commit_inner(
         today : today.timestamp()
     };
 
-    let resp = client.post(url)
+    let resp = client.post(&format!("{}/commit", url))
         .json(&req)
         .header("Keyr-Token", token)
         .send()?;

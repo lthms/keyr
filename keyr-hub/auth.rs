@@ -41,11 +41,9 @@ impl FromRequest for TokenHeader {
 
     fn from_request(req: &HttpRequest, _pl: &mut Payload) -> Self::Future {
         if let Some(token) = req.headers().get("keyr-token") {
-            if let Ok(token) = token.to_str() {
-                ok(TokenHeader(Token(token.to_owned())))
-            } else {
-                err(KeyrHubError::IncorrectToken)
-            }
+            let token = token.to_str().unwrap_or("").to_owned();
+
+            ok(TokenHeader(Token(token)))
         } else {
             err(KeyrHubError::MissingKeyrTokenHeader)
         }

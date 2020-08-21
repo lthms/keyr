@@ -30,35 +30,71 @@ use chrono::{Utc, TimeZone};
 use std::path::PathBuf;
 
 use keyr_hubstorage as khs;
-use khs::users::identify_user_by_token;
+use khs::users;
 
-use keyr_types::{SynchronizeRequest, Summary};
+use keyr_types::{SynchronizeRequest, KeystrokesStats, Summary};
 
 use crate::error::KeyrHubError;
 use crate::database::{PgPool, create_pool};
 use crate::auth::TokenHeader;
 use crate::config::HubConfig;
 
-#[post("/sync")]
-async fn sync(
+#[post("/commit")]
+async fn commit(
     pool : Data<PgPool>,
     tok : TokenHeader,
     request : Json<SynchronizeRequest>
 ) -> Result<Json<Summary>, KeyrHubError> {
     let conn = pool.into_inner().get()?;
 
-    if let Some(mid) = identify_user_by_token(&conn, tok.as_token())? {
-        let today = Utc.timestamp(request.today, 0);
+    let mid = users::identify_user_by_token(&conn, tok.as_token())?;
+    let today = Utc.timestamp(request.today, 0);
 
-        // FIXME
-        Ok(
-            Json(
-                khs::stats::sync(&conn, mid, today, &request.staging_area)?.unwrap()
-            )
+    // FIXME
+    Ok(
+        Json(
+            khs::stats::sync(&conn, mid, today, &request.staging_area)?
         )
-    } else {
-        Err(KeyrHubError::IncorrectToken)
-    }
+    )
+}
+
+#[post("/revert/initiate")]
+async fn revert_initiate(
+    pool : Data<PgPool>,
+    tok : TokenHeader,
+) -> Result<Json<KeystrokesStats>, KeyrHubError> {
+    let conn = pool.into_inner().get()?;
+
+    let mid = users::identify_user_by_token(&conn, tok.as_token())?;
+    let res = khs::stats::initiate_revert(&conn, mid)?;
+
+    Ok(Json(res))
+}
+
+#[post("/revert/terminate")]
+async fn revert_terminate(
+    pool : Data<PgPool>,
+    tok : TokenHeader,
+) -> Result<Json<()>, KeyrHubError> {
+    let conn = pool.into_inner().get()?;
+
+    let mid = users::identify_user_by_token(&conn, tok.as_token())?;
+    let res = khs::stats::terminate_revert(&conn, mid)?;
+
+    Ok(Json(res))
+}
+
+#[post("/revert/cancel")]
+async fn revert_cancel(
+    pool : Data<PgPool>,
+    tok : TokenHeader,
+) -> Result<Json<()>, KeyrHubError> {
+    let conn = pool.into_inner().get()?;
+
+    let mid = users::identify_user_by_token(&conn, tok.as_token())?;
+    khs::users::unfreeze_user(&conn, mid)?;
+
+    Ok(Json(()))
 }
 
 async fn run() -> anyhow::Result<()> {
@@ -75,7 +111,11 @@ async fn run() -> anyhow::Result<()> {
     HttpServer::new(
         move || App::new()
             .data(pool.clone())
-            .service(sync))
+            .service(commit)
+            .service(revert_initiate)
+            .service(revert_terminate)
+            .service(revert_cancel)
+    )
         .bind("127.0.0.1:8080")?
         .run()
         .await?;

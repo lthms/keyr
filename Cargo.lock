@@ -1179,6 +1179,7 @@ name = "keyr-types"
 version = "0.0.0-dev"
 dependencies = [
  "serde",
+ "serde_derive",
 ]
 
 [[package]]

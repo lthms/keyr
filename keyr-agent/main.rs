@@ -28,6 +28,7 @@ pub mod cli;
 pub mod config;
 pub mod stage;
 pub mod commit;
+pub mod revert;
 pub mod format;
 
 use crate::cli::Output;
@@ -44,6 +45,7 @@ fn main() -> Result<()> {
     match matches.subcommand() {
         ("stage", _) => stage::run(&conn)?,
         ("commit", Some(_)) => commit::run(&conn, &conf.hub_config()?)?,
+        ("revert", Some(_)) => revert::run(&conn, &conf.hub_config()?)?,
         ("format", Some(m)) => format::run(&conn, &Output::from_matches(m))?,
         _ => println!("nothing to do"),
     }

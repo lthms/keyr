@@ -1,12 +1,13 @@
+#[macro_use] extern crate serde_derive;
+
 use std::collections::HashMap;
-use serde::{Serialize, Deserialize};
 
 pub type Timestamp = i64;
-pub type StagingArea = HashMap<Timestamp, u32>;
+pub type KeystrokesStats = HashMap<Timestamp, u32>;
 
 #[derive(Serialize, Deserialize)]
 pub struct SynchronizeRequest {
-    pub staging_area : StagingArea,
+    pub staging_area : KeystrokesStats,
     pub today : Timestamp,
 }
 
