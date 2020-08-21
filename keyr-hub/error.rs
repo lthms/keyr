@@ -34,6 +34,14 @@ pub enum KeyrHubError {
     Pool(#[from] r2d2::Error),
     #[error(transparent)]
     IO(#[from] std::io::Error),
+    #[error("The requested data are not public")]
+    PrivateData
+}
+
+impl From<diesel::result::Error> for KeyrHubError {
+    fn from(err : diesel::result::Error) -> KeyrHubError {
+        KeyrHubstorageError::from(err).into()
+    }
 }
 
 pub type Result<R> = std::result::Result<R, KeyrHubError>;
@@ -41,6 +49,8 @@ pub type Result<R> = std::result::Result<R, KeyrHubError>;
 impl ResponseError for KeyrHubError {
     fn status_code(&self) -> StatusCode {
         match self {
+            KeyrHubError::PrivateData =>
+                StatusCode::UNAUTHORIZED,
             KeyrHubError::MissingKeyrTokenHeader => StatusCode::UNAUTHORIZED,
             KeyrHubError::Storage(KeyrHubstorageError::InvalidToken) =>
                 StatusCode::UNAUTHORIZED,

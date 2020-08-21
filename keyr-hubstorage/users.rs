@@ -161,6 +161,21 @@ where Conn : Connection<Backend = Pg> {
     })
 }
 
+pub fn find_by_name_in_transaction<Conn>(
+    conn : &Conn,
+    name : String,
+) -> Result<UserId>
+where Conn : Connection<Backend = Pg> {
+    let id = users::table
+        .select(users::id)
+        .filter(users::name.eq(name))
+        .get_result::<i32>(conn)
+        .optional()?
+        .ok_or(KeyrHubstorageError::UnknownUser)?;
+
+    Ok(UserId(id))
+}
+
 pub fn freeze_user_in_transaction<Conn>(
     conn : &Conn,
     id : UserId,
@@ -195,6 +210,31 @@ where Conn : Connection<Backend = Pg> {
         let id = id.validate(conn)?;
 
         is_frozen_in_transaction(conn, id)
+    })
+}
+
+pub fn is_visible_in_transaction<Conn>(
+    conn : &Conn,
+    id : UserId,
+) -> Result<bool>
+where Conn : Connection<Backend = Pg> {
+    let res = users::table
+        .filter(users::id.eq(id.0))
+        .select(users::visible)
+        .get_result::<bool>(conn)?;
+
+    Ok(res)
+}
+
+pub fn is_visible<Conn>(
+    conn : &Conn,
+    id : MaybeUserId,
+) -> Result<bool>
+where Conn : Connection<Backend = Pg> {
+    conn.transaction(|| {
+        let id = id.validate(conn)?;
+
+        is_visible_in_transaction(conn, id)
     })
 }
 

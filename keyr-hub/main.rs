@@ -23,8 +23,10 @@ pub mod auth;
 pub mod config;
 pub mod cli;
 
-use actix_web::{App, HttpServer, post};
-use actix_web::web::{Json, Data};
+use diesel::prelude::*;
+
+use actix_web::{App, HttpServer, get, post};
+use actix_web::web::{Path, Json, Data};
 use chrono::{Utc, TimeZone};
 
 use std::path::PathBuf;
@@ -96,6 +98,28 @@ async fn revert_cancel(
     Ok(Json(()))
 }
 
+#[get("/view/{name}")]
+async fn view_stats(
+    pool : Data<PgPool>,
+    name : Path<String>,
+) -> Result<Json<KeystrokesStats>, KeyrHubError> {
+    let conn = pool.into_inner().get()?;
+
+    let res = conn.transaction::<_, KeyrHubError, _>(|| {
+        let id = khs::users::find_by_name_in_transaction(&conn, name.clone())?;
+
+        if !khs::users::is_visible_in_transaction(&conn, id)? {
+            return Err(KeyrHubError::PrivateData);
+        }
+
+        let res = khs::stats::get_keystrokes_stats_in_transaction(&conn, id)?;
+
+        Ok(res)
+    })?;
+
+    Ok(Json(res))
+}
+
 async fn run() -> anyhow::Result<()> {
     let matches = cli::get_app().get_matches();
 
@@ -114,6 +138,7 @@ async fn run() -> anyhow::Result<()> {
             .service(revert_initiate)
             .service(revert_terminate)
             .service(revert_cancel)
+            .service(view_stats)
     )
         .bind(&format!("{}:{}", conf.http.url, conf.http.port))?
         .run()

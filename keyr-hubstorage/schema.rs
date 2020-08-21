@@ -20,6 +20,7 @@ table! {
         id -> Int4,
         name -> Varchar,
         frozen -> Bool,
+        visible -> Bool,
     }
 }
 
