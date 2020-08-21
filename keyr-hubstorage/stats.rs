@@ -8,7 +8,7 @@ use keyr_types::{Summary, KeystrokesStats};
 
 use crate::users::{MaybeUserId, UserId};
 use crate::schema::statistics as stats;
-use crate::error::Result;
+use crate::error::{KeyrHubstorageError, Result};
 
 pub fn upsert_keystrokes_count<Conn>(
     conn : &Conn,
@@ -31,6 +31,10 @@ pub fn upsert_keystrokes_count_in_transaction<Conn>(
     count : i32,
 ) -> Result<()>
 where Conn : Connection<Backend = Pg> {
+    if crate::users::is_frozen_in_transaction(conn, id)? {
+        return Err(KeyrHubstorageError::FrozenUser);
+    }
+
     let date = date
         .with_nanosecond(0).unwrap()
         .with_second(0).unwrap()

@@ -13,6 +13,8 @@ pub enum KeyrHubstorageError {
     UnknownUser,
     #[error("Nickname {0} is already being used")]
     AlreadyUsedNickname(String),
+    #[error("User is frozen")]
+    FrozenUser,
 }
 
 pub type Result<R> = std::result::Result<R, KeyrHubstorageError>;
