@@ -116,7 +116,7 @@ async fn run() -> anyhow::Result<()> {
             .service(revert_terminate)
             .service(revert_cancel)
     )
-        .bind("127.0.0.1:8080")?
+        .bind(&format!("{}:{}", conf.http.url, conf.http.port))?
         .run()
         .await?;
 

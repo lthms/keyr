@@ -29,8 +29,15 @@ pub struct DatabaseConfig {
 }
 
 #[derive(Debug, Deserialize, Clone)]
+pub struct HttpConfig {
+    pub port : isize,
+    pub url : String,
+}
+
+#[derive(Debug, Deserialize, Clone)]
 pub struct HubConfig {
-    pub database : DatabaseConfig
+    pub http : HttpConfig,
+    pub database : DatabaseConfig,
 }
 
 
