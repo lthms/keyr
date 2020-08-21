@@ -68,7 +68,7 @@ where Conn : Connection<Backend = Pg> {
     Ok(())
 }
 
-pub fn sync<Conn>(
+pub fn commit<Conn>(
     conn : &Conn,
     id : MaybeUserId,
     today : DateTime<Utc>,
@@ -77,28 +77,18 @@ pub fn sync<Conn>(
 where Conn : Connection<Backend = Pg> {
     conn.transaction(|| {
         let id = id.validate(conn)?;
-        commit_staging_area_in_transaction(conn, id, sa)?;
+
+        for (t, v) in sa.iter() {
+            let date = Utc.timestamp(*t, 0);
+
+            upsert_keystrokes_count_in_transaction(conn, id, &date, *v as i32)?;
+        }
+
         let s = get_summary_in_transaction(conn, id, today)?;
 
         Ok(s)
     })
 }
-
-pub fn commit_staging_area_in_transaction<Conn>(
-    conn : &Conn,
-    id : UserId,
-    sa : &KeystrokesStats,
-) -> Result<()>
-where Conn : Connection<Backend = Pg> {
-    for (t, v) in sa.iter() {
-        let date = Utc.timestamp(*t, 0);
-
-        upsert_keystrokes_count_in_transaction(conn, id, &date, *v as i32)?;
-    }
-
-    Ok(())
-}
-
 
 pub fn get_summary_in_transaction<Conn>(
     conn : &Conn,

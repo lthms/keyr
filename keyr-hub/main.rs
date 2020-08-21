@@ -50,10 +50,9 @@ async fn commit(
     let mid = users::identify_user_by_token(&conn, tok.as_token())?;
     let today = Utc.timestamp(request.today, 0);
 
-    // FIXME
     Ok(
         Json(
-            khs::stats::sync(&conn, mid, today, &request.staging_area)?
+            khs::stats::commit(&conn, mid, today, &request.staging_area)?
         )
     )
 }
