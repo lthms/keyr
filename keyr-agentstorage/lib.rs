@@ -154,7 +154,7 @@ pub fn upsert_current_hour_count(conn : &SqliteConnection, count : u32) -> Resul
     upsert_hour_count(conn, now.date(), now.hour(), count)
 }
 
-pub fn upsert_hour_count<Tz>(
+pub fn upsert_hour_count_in_transaction<Tz>(
     conn : &SqliteConnection,
     dt : Date<Tz>,
     hour : u32,
@@ -164,35 +164,45 @@ where Tz : TimeZone {
     let now = dt.and_hms(hour, 0, 0).naive_utc();
 
     if count != 0 {
-        transaction_retry(conn, &|| {
-            let prev = sa::table
-                .select(sa::count)
-                .filter(sa::timestamp.eq(now))
-                .get_result::<i32>(conn)
-                .optional()?;
+        let prev = sa::table
+            .select(sa::count)
+            .filter(sa::timestamp.eq(now))
+            .get_result::<i32>(conn)
+            .optional()?;
 
-            if let Some(prev) = prev {
-                let new_count = prev + count as i32;
+        if let Some(prev) = prev {
+            let new_count = prev + count as i32;
 
-                diesel::update(sa::table.find(now))
-                    .set(sa::count.eq(new_count))
-                    .execute(conn)?;
+            diesel::update(sa::table.find(now))
+                .set(sa::count.eq(new_count))
+                .execute(conn)?;
 
-                Ok(new_count as u32)
-            } else {
-                diesel::insert_into(sa::table)
-                    .values(vec![
-                        (sa::timestamp.eq(now),
-                         sa::count.eq(count as i32)),
-                    ])
-                    .execute(conn)?;
+            Ok(new_count as u32)
+        } else {
+            diesel::insert_into(sa::table)
+                .values(vec![
+                    (sa::timestamp.eq(now),
+                     sa::count.eq(count as i32)),
+                ])
+                .execute(conn)?;
 
-                Ok(count)
-            }
-        })
+            Ok(count)
+        }
     } else {
         Ok(count)
     }
+}
+
+pub fn upsert_hour_count<Tz>(
+    conn : &SqliteConnection,
+    dt : Date<Tz>,
+    hour : u32,
+    count : u32,
+) -> Result<u32, Error>
+where Tz : TimeZone {
+    transaction_retry(conn, &|| {
+        upsert_hour_count_in_transaction(conn, dt.clone(), hour, count)
+    })
 }
 
 pub fn migrate(conn : &SqliteConnection) -> Result<(), Error> {

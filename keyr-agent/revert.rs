@@ -40,7 +40,7 @@ pub fn run(conn : &SqliteConnection, hub : &HubConfig) -> Result<()> {
 
             for (t, v) in resp {
                 let d = Utc.timestamp(t, 0);
-                kas::upsert_hour_count(conn, d.date(), d.hour(), v)?;
+                kas::upsert_hour_count_in_transaction(conn, d.date(), d.hour(), v)?;
             }
 
             kas::drop_summary(&conn)?;
