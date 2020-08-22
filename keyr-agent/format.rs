@@ -1,31 +1,31 @@
 use anyhow::Result;
+use num_format::{SystemLocale, ToFormattedString};
 use serde_json::Value;
 use tinytemplate::TinyTemplate;
-use num_format::{ToFormattedString, SystemLocale};
 
-use keyr_agentstorage as kas;
 use kas::SqliteConnection;
+use keyr_agentstorage as kas;
 
 use crate::cli::Output;
 
 fn num_format_formatter(
     val : &Value,
-    output : &mut String
+    output : &mut String,
 ) -> tinytemplate::error::Result<()> {
     match val {
         Value::Number(x) if x.is_i64() => {
             output.push_str(
                 // FIXME
-                &x.as_i64().unwrap()
-                    .to_formatted_string(&SystemLocale::default().unwrap())
+                &x.as_i64()
+                    .unwrap()
+                    .to_formatted_string(&SystemLocale::default().unwrap()),
             );
             Ok(())
-        },
+        }
         _ => Err(tinytemplate::error::Error::GenericError {
             msg : "`num_format' is for integers only".into(),
-        })
+        }),
     }
-
 }
 
 pub fn run(conn : &SqliteConnection, output : &Output) -> Result<()> {
@@ -42,7 +42,7 @@ pub fn run(conn : &SqliteConnection, output : &Output) -> Result<()> {
             tt.add_formatter("num_format", num_format_formatter);
 
             println!("{}", tt.render("fmt", &res)?);
-        },
+        }
     }
 
     Ok(())

@@ -17,7 +17,7 @@
  * along with keyr.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use clap::{App, SubCommand, ArgGroup, ArgMatches};
+use clap::{App, ArgGroup, ArgMatches, SubCommand};
 
 pub enum Output<'a> {
     Json,
@@ -31,27 +31,26 @@ pub fn get_app() -> App<'static, 'static> {
         .about("Synchronize your keystrokes locally and remotely")
         .subcommand(
             SubCommand::with_name("stage")
-                .about("Fetch the current counter of keyrd and stage it")
+                .about("Fetch the current counter of keyrd and stage it"),
         )
         .subcommand(
             SubCommand::with_name("commit")
-                .about("Push staging keystrokes to a hub")
+                .about("Push staging keystrokes to a hub"),
         )
         .subcommand(
             SubCommand::with_name("revert")
-                .about("Retreive keystrokes from a hub")
+                .about("Retreive keystrokes from a hub"),
         )
         .subcommand(
             SubCommand::with_name("format")
                 .about("Format your keystrokes statistics")
                 .args_from_usage(
                     "--template [string] 'A template to output the result'
-                     --json 'Output the json as computed'"
+                     --json 'Output the json as computed'",
                 )
                 .group(
-                    ArgGroup::with_name("output")
-                        .args(&["template", "json"])
-                )
+                    ArgGroup::with_name("output").args(&["template", "json"]),
+                ),
         )
 }
 
@@ -59,7 +58,7 @@ impl<'a> Output<'a> {
     pub fn from_matches(matches : &'a ArgMatches<'static>) -> Self {
         match matches.value_of("template") {
             Some(tmp) => Output::Template(tmp),
-            _         => Output::Json,
+            _ => Output::Json,
         }
     }
 }

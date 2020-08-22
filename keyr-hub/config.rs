@@ -17,9 +17,9 @@
  * along with keyr.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+use anyhow::Result;
 use serde::Deserialize;
 use std::path::Path;
-use anyhow::Result;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct DatabaseConfig {
@@ -40,12 +40,9 @@ pub struct HubConfig {
     pub database : DatabaseConfig,
 }
 
-
 impl HubConfig {
     pub fn from_file(path : &Path) -> Result<HubConfig> {
-        let res : HubConfig = toml::from_str(
-            &std::fs::read_to_string(path)?
-        )?;
+        let res : HubConfig = toml::from_str(&std::fs::read_to_string(path)?)?;
 
         Ok(res)
     }
@@ -54,7 +51,8 @@ impl HubConfig {
         format!(
             "postgres://{}:{}@{}",
             self.database.user,
-            self.database.password
+            self.database
+                .password
                 .as_ref()
                 .map(|x| x.clone())
                 .unwrap_or("".to_owned()),

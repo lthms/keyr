@@ -18,12 +18,12 @@
  */
 
 use anyhow::Result;
-use chrono::{Utc, TimeZone, Local};
+use chrono::{Local, TimeZone, Utc};
 use reqwest::blocking::Client;
 
-use keyr_agentstorage as kas;
 use kas::SqliteConnection;
-use keyr_types::{Summary, SynchronizeRequest, KeystrokesStats};
+use keyr_agentstorage as kas;
+use keyr_types::{KeystrokesStats, Summary, SynchronizeRequest};
 
 use crate::config::HubConfig;
 
@@ -31,20 +31,19 @@ fn commit_inner(
     conn : &SqliteConnection,
     url : &str,
     token : &str,
-    sa : KeystrokesStats
+    sa : KeystrokesStats,
 ) -> Result<()> {
     let client = Client::new();
 
-    let today = Local::today()
-        .and_hms(0, 0, 0)
-        .naive_utc();
+    let today = Local::today().and_hms(0, 0, 0).naive_utc();
 
     let req = SynchronizeRequest {
         staging_area : sa,
-        today : today.timestamp()
+        today : today.timestamp(),
     };
 
-    let resp = client.post(&format!("{}/commit", url))
+    let resp = client
+        .post(&format!("{}/commit", url))
         .json(&req)
         .header("Keyr-Token", token)
         .send()?;
@@ -67,12 +66,9 @@ fn commit_inner(
 }
 
 pub fn run(conn : &SqliteConnection, hub : &HubConfig) -> Result<()> {
-    kas::commit(&conn, |sa| commit_inner(
-        &conn,
-        &hub.hub_url,
-        &hub.api_token,
-        sa
-    ))?;
+    kas::commit(&conn, |sa| {
+        commit_inner(&conn, &hub.hub_url, &hub.api_token, sa)
+    })?;
 
     Ok(())
 }

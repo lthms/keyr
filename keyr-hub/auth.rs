@@ -17,12 +17,12 @@
  * along with keyr.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use actix_web::{FromRequest, HttpRequest};
 use actix_web::dev::Payload;
-use futures::future::{Ready, ok, err};
+use actix_web::{FromRequest, HttpRequest};
+use futures::future::{err, ok, Ready};
 
-use keyr_hubstorage as kbs;
 use kbs::users::Token;
+use keyr_hubstorage as kbs;
 
 use crate::error::KeyrHubError;
 
@@ -39,7 +39,7 @@ impl FromRequest for TokenHeader {
     type Error = KeyrHubError;
     type Future = Ready<Result<TokenHeader, KeyrHubError>>;
 
-    fn from_request(req: &HttpRequest, _pl: &mut Payload) -> Self::Future {
+    fn from_request(req : &HttpRequest, _pl : &mut Payload) -> Self::Future {
         if let Some(token) = req.headers().get("keyr-token") {
             let token = token.to_str().unwrap_or("").to_owned();
 

@@ -18,8 +18,8 @@
  */
 
 use anyhow::Result;
-use std::path::{Path, PathBuf};
 use serde::Deserialize;
+use std::path::{Path, PathBuf};
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct LocalConfig {
@@ -58,14 +58,13 @@ impl AgentConfig {
     }
 
     pub fn from_file(path : &Path) -> Result<AgentConfig> {
-        let mut res : AgentConfig = toml::from_str(
-            &std::fs::read_to_string(path)?
-        )?;
+        let mut res : AgentConfig =
+            toml::from_str(&std::fs::read_to_string(path)?)?;
 
         if let Some(ref local) = res.local {
             if local.database_path.is_relative() {
                 res.local = Some(LocalConfig {
-                    database_path : path.join(local.database_path.clone())
+                    database_path : path.join(local.database_path.clone()),
                 })
             }
         }
@@ -75,17 +74,15 @@ impl AgentConfig {
 
     pub fn local_config(&self) -> Result<LocalConfig> {
         match &self.local {
-            Some(local) => {
-                Ok(local.clone())
-            },
+            Some(local) => Ok(local.clone()),
             None => {
                 let xdg_dirs = xdg::BaseDirectories::with_prefix("keyr")?;
                 let path = xdg_dirs.place_config_file("localstorage.sqlite")?;
 
                 Ok(LocalConfig {
-                    database_path : path.to_owned()
+                    database_path : path.to_owned(),
                 })
-            },
+            }
         }
     }
 
@@ -94,6 +91,5 @@ impl AgentConfig {
             Some(hub) => Ok(hub.clone()),
             None => bail!("Missing keyr-hub configuration."),
         }
-
     }
 }

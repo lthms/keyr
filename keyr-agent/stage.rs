@@ -22,8 +22,8 @@ use std::os::unix::net::UnixStream;
 
 use anyhow::Result;
 
-use keyr_agentstorage as kas;
 use kas::SqliteConnection;
+use keyr_agentstorage as kas;
 
 fn keyrd_fetch() -> Result<u32> {
     let mut stream = UnixStream::connect("/tmp/keyrd.socket")?;

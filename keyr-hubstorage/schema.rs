@@ -27,8 +27,4 @@ table! {
 joinable!(statistics -> users (user_id));
 joinable!(tokens -> users (user_id));
 
-allow_tables_to_appear_in_same_query!(
-    statistics,
-    tokens,
-    users,
-);
+allow_tables_to_appear_in_same_query!(statistics, tokens, users,);

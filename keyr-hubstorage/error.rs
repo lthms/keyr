@@ -1,5 +1,5 @@
-use thiserror::Error;
 use diesel_migrations as dm;
+use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum KeyrHubstorageError {

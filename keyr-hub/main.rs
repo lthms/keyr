@@ -17,46 +17,47 @@
  * along with keyr.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pub mod error;
-pub mod database;
 pub mod auth;
-pub mod config;
 pub mod cli;
+pub mod config;
+pub mod database;
+pub mod error;
 
 use diesel::prelude::*;
 
-use actix_web::{App, HttpServer, get, post};
-use actix_web::web::{Path, Json, Data};
-use chrono::{Utc, TimeZone};
+use actix_web::web::{Data, Json, Path};
+use actix_web::{get, post, App, HttpServer};
+use chrono::{TimeZone, Utc};
 
 use std::path::PathBuf;
 
 use keyr_hubstorage as khs;
 use khs::users;
 
-use keyr_types::{SynchronizeRequest, KeystrokesStats, Summary};
+use keyr_types::{KeystrokesStats, Summary, SynchronizeRequest};
 
-use crate::error::KeyrHubError;
-use crate::database::{PgPool, create_pool};
 use crate::auth::TokenHeader;
 use crate::config::HubConfig;
+use crate::database::{create_pool, PgPool};
+use crate::error::KeyrHubError;
 
 #[post("/commit")]
 async fn commit(
     pool : Data<PgPool>,
     tok : TokenHeader,
-    request : Json<SynchronizeRequest>
+    request : Json<SynchronizeRequest>,
 ) -> Result<Json<Summary>, KeyrHubError> {
     let conn = pool.into_inner().get()?;
 
     let mid = users::identify_user_by_token(&conn, tok.as_token())?;
     let today = Utc.timestamp(request.today, 0);
 
-    Ok(
-        Json(
-            khs::stats::commit(&conn, mid, today, &request.staging_area)?
-        )
-    )
+    Ok(Json(khs::stats::commit(
+        &conn,
+        mid,
+        today,
+        &request.staging_area,
+    )?))
 }
 
 #[post("/revert/initiate")]
@@ -131,26 +132,25 @@ async fn run() -> anyhow::Result<()> {
 
     khs::migrations::run(&pool.get()?)?;
 
-    HttpServer::new(
-        move || App::new()
+    HttpServer::new(move || {
+        App::new()
             .data(pool.clone())
             .service(commit)
             .service(revert_initiate)
             .service(revert_terminate)
             .service(revert_cancel)
             .service(view_stats)
-    )
-        .bind(&format!("{}:{}", conf.http.url, conf.http.port))?
-        .run()
-        .await?;
+    })
+    .bind(&format!("{}:{}", conf.http.url, conf.http.port))?
+    .run()
+    .await?;
 
     Ok(())
 }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    run().await
-        .map_err(
-            |err| std::io::Error::new(std::io::ErrorKind::Other, err.to_string())
-        )
+    run().await.map_err(|err| {
+        std::io::Error::new(std::io::ErrorKind::Other, err.to_string())
+    })
 }

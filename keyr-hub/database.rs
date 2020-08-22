@@ -17,8 +17,8 @@
  * along with keyr.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use diesel::PgConnection;
 use diesel::r2d2::{ConnectionManager, Pool};
+use diesel::PgConnection;
 
 use crate::error::Result;
 

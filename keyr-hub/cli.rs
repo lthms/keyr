@@ -29,6 +29,6 @@ pub fn get_app() -> App<'static, 'static> {
                 .help("A path to a TOML file")
                 .long("config-file")
                 .value_name("FILE")
-                .required(true)
+                .required(true),
         )
 }

@@ -21,8 +21,8 @@ use actix_web::error::ResponseError;
 use actix_web::http::StatusCode;
 use thiserror::Error;
 
-use keyr_hubstorage as kbs;
 use kbs::error::KeyrHubstorageError;
+use keyr_hubstorage as kbs;
 
 #[derive(Error, Debug)]
 pub enum KeyrHubError {
@@ -35,7 +35,7 @@ pub enum KeyrHubError {
     #[error(transparent)]
     IO(#[from] std::io::Error),
     #[error("The requested data are not public")]
-    PrivateData
+    PrivateData,
 }
 
 impl From<diesel::result::Error> for KeyrHubError {
@@ -49,15 +49,17 @@ pub type Result<R> = std::result::Result<R, KeyrHubError>;
 impl ResponseError for KeyrHubError {
     fn status_code(&self) -> StatusCode {
         match self {
-            KeyrHubError::PrivateData =>
-                StatusCode::UNAUTHORIZED,
+            KeyrHubError::PrivateData => StatusCode::UNAUTHORIZED,
             KeyrHubError::MissingKeyrTokenHeader => StatusCode::UNAUTHORIZED,
-            KeyrHubError::Storage(KeyrHubstorageError::InvalidToken) =>
-                StatusCode::UNAUTHORIZED,
-            KeyrHubError::Storage(KeyrHubstorageError::UnknownUser) =>
-                StatusCode::BAD_REQUEST,
-            KeyrHubError::Storage(KeyrHubstorageError::AlreadyUsedNickname(_)) =>
-                StatusCode::BAD_REQUEST,
+            KeyrHubError::Storage(KeyrHubstorageError::InvalidToken) => {
+                StatusCode::UNAUTHORIZED
+            }
+            KeyrHubError::Storage(KeyrHubstorageError::UnknownUser) => {
+                StatusCode::BAD_REQUEST
+            }
+            KeyrHubError::Storage(
+                KeyrHubstorageError::AlreadyUsedNickname(_),
+            ) => StatusCode::BAD_REQUEST,
             KeyrHubError::Storage(_) => StatusCode::INTERNAL_SERVER_ERROR,
             KeyrHubError::Pool(_) => StatusCode::INTERNAL_SERVER_ERROR,
             KeyrHubError::IO(_) => StatusCode::INTERNAL_SERVER_ERROR,

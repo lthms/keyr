@@ -17,22 +17,24 @@
  * along with keyr.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#[macro_use] extern crate diesel;
-#[macro_use] extern crate diesel_migrations;
+#[macro_use]
+extern crate diesel;
+#[macro_use]
+extern crate diesel_migrations;
 
+use chrono::{Date, DateTime, Local, NaiveDateTime, TimeZone, Timelike, Utc};
 use diesel::prelude::*;
 use diesel::result::Error;
 pub use diesel::sqlite::SqliteConnection;
 use diesel_migrations::RunMigrationsError;
-use chrono::{DateTime, Utc, Local, Timelike, Date, TimeZone, NaiveDateTime};
 
-use std::fmt::Display;
-use std::time::Duration;
 use std::collections::HashMap;
+use std::fmt::Display;
 use std::path::Path;
+use std::time::Duration;
 
-mod schema;
 mod migrations;
+mod schema;
 
 use schema::staging_area as sa;
 use schema::summary;
@@ -51,7 +53,8 @@ pub fn transaction_retry<A, E, F>(
 ) -> Result<A, E>
 where
     E : From<Error> + Display,
-    F : Fn() -> Result<A, E>, {
+    F : Fn() -> Result<A, E>,
+{
     loop {
         match conn.exclusive_transaction(f) {
             Err(err) => {
@@ -60,17 +63,15 @@ where
                     continue;
                 }
 
-                break Err(err)
-            },
+                break Err(err);
+            }
             res => break res,
         }
     }
 }
 
 pub fn get_today_count(conn : &SqliteConnection) -> Result<u64, Error> {
-    let today = Local::today()
-        .and_hms(0, 0, 0)
-        .naive_utc();
+    let today = Local::today().and_hms(0, 0, 0).naive_utc();
 
     transaction_retry(conn, &|| {
         let staging_count = sa::table
@@ -87,7 +88,6 @@ pub fn get_today_count(conn : &SqliteConnection) -> Result<u64, Error> {
             .unwrap_or(0);
 
         Ok(staging_count as u64 + summary_count as u64)
-
     })
 }
 
@@ -109,11 +109,8 @@ pub fn get_global_count(conn : &SqliteConnection) -> Result<u64, Error> {
     })
 }
 
-pub fn drop_summary(
-    conn : &SqliteConnection,
-) -> Result<(), Error> {
-    diesel::delete(summary::table)
-        .execute(conn)?;
+pub fn drop_summary(conn : &SqliteConnection) -> Result<(), Error> {
+    diesel::delete(summary::table).execute(conn)?;
 
     Ok(())
 }
@@ -123,33 +120,38 @@ pub fn set_summary_in_transaction(
     oldest : DateTime<Utc>,
     global_count : u64,
     today : DateTime<Utc>,
-    today_count : u64
+    today_count : u64,
 ) -> Result<(), Error> {
-    diesel::delete(summary::table)
+    diesel::delete(summary::table).execute(conn)?;
+
+    diesel::insert_into(summary::table)
+        .values(vec![(
+            summary::since.eq(oldest.naive_utc()),
+            summary::count.eq(global_count as i64),
+        )])
         .execute(conn)?;
 
     diesel::insert_into(summary::table)
-        .values(vec![
-            (summary::since.eq(oldest.naive_utc()),
-             summary::count.eq(global_count as i64)),
-        ])
-        .execute(conn)?;
-
-    diesel::insert_into(summary::table)
-        .values(vec![
-            (summary::since.eq(today.naive_utc()),
-             summary::count.eq(today_count as i64)),
-        ])
+        .values(vec![(
+            summary::since.eq(today.naive_utc()),
+            summary::count.eq(today_count as i64),
+        )])
         .execute(conn)?;
 
     Ok(())
 }
 
-pub fn upsert_current_hour_count(conn : &SqliteConnection, count : u32) -> Result<u32, Error> {
+pub fn upsert_current_hour_count(
+    conn : &SqliteConnection,
+    count : u32,
+) -> Result<u32, Error> {
     let now = Utc::now()
-        .with_nanosecond(0).unwrap()
-        .with_second(0).unwrap()
-        .with_minute(0).unwrap();
+        .with_nanosecond(0)
+        .unwrap()
+        .with_second(0)
+        .unwrap()
+        .with_minute(0)
+        .unwrap();
 
     upsert_hour_count(conn, now.date(), now.hour(), count)
 }
@@ -160,7 +162,9 @@ pub fn upsert_hour_count_in_transaction<Tz>(
     hour : u32,
     count : u32,
 ) -> Result<u32, Error>
-where Tz : TimeZone {
+where
+    Tz : TimeZone,
+{
     let now = dt.and_hms(hour, 0, 0).naive_utc();
 
     if count != 0 {
@@ -180,10 +184,10 @@ where Tz : TimeZone {
             Ok(new_count as u32)
         } else {
             diesel::insert_into(sa::table)
-                .values(vec![
-                    (sa::timestamp.eq(now),
-                     sa::count.eq(count as i32)),
-                ])
+                .values(vec![(
+                    sa::timestamp.eq(now),
+                    sa::count.eq(count as i32),
+                )])
                 .execute(conn)?;
 
             Ok(count)
@@ -199,7 +203,9 @@ pub fn upsert_hour_count<Tz>(
     hour : u32,
     count : u32,
 ) -> Result<u32, Error>
-where Tz : TimeZone {
+where
+    Tz : TimeZone,
+{
     transaction_retry(conn, &|| {
         upsert_hour_count_in_transaction(conn, dt.clone(), hour, count)
     })
@@ -207,11 +213,9 @@ where Tz : TimeZone {
 
 pub fn migrate(conn : &SqliteConnection) -> Result<(), Error> {
     transaction_retry(conn, &|| {
-        migrations::run(conn).map_err(|err| {
-            match err {
-                RunMigrationsError::QueryError(err) => err,
-                _ => panic!("FIXME")
-            }
+        migrations::run(conn).map_err(|err| match err {
+            RunMigrationsError::QueryError(err) => err,
+            _ => panic!("FIXME"),
         })
     })
 }
@@ -240,12 +244,10 @@ fn drop_staging_area_in_transaction(
     Ok(())
 }
 
-pub fn commit<A, E, K>(
-    conn : &SqliteConnection,
-    k : K
-) -> Result<A, Error>
+pub fn commit<A, E, K>(conn : &SqliteConnection, k : K) -> Result<A, Error>
 where
-    K : Fn(KeystrokesStats) -> Result<A, E> {
+    K : Fn(KeystrokesStats) -> Result<A, E>,
+{
     transaction_retry(conn, &|| {
         let sa = get_staging_area_in_transaction(conn)?;
 
@@ -253,11 +255,10 @@ where
             Ok(res) => {
                 drop_staging_area_in_transaction(conn)?;
                 Ok(res)
-            },
+            }
             Err(_) => {
                 panic!() // FIXME
             }
-
         }
     })
 }

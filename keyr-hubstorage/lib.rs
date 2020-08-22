@@ -17,11 +17,13 @@
  * along with keyr.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#[macro_use] extern crate diesel_migrations;
-#[macro_use] extern crate diesel;
+#[macro_use]
+extern crate diesel_migrations;
+#[macro_use]
+extern crate diesel;
 
 pub mod error;
-pub mod schema;
-pub mod users;
-pub mod stats;
 pub mod migrations;
+pub mod schema;
+pub mod stats;
+pub mod users;

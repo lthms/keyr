@@ -18,11 +18,11 @@
  */
 
 use anyhow::Result;
-use chrono::{Utc, TimeZone, Timelike};
+use chrono::{TimeZone, Timelike, Utc};
 use reqwest::blocking::Client;
 
-use keyr_agentstorage as kas;
 use kas::SqliteConnection;
+use keyr_agentstorage as kas;
 use keyr_types::KeystrokesStats;
 
 use crate::config::HubConfig;
@@ -31,7 +31,8 @@ pub fn run(conn : &SqliteConnection, hub : &HubConfig) -> Result<()> {
     let client = Client::new();
 
     kas::transaction_retry(&conn, &|| {
-        let resp = client.post(&format!("{}/revert/initiate", &hub.hub_url))
+        let resp = client
+            .post(&format!("{}/revert/initiate", &hub.hub_url))
             .header("Keyr-Token", &hub.api_token)
             .send()?;
 
@@ -40,12 +41,18 @@ pub fn run(conn : &SqliteConnection, hub : &HubConfig) -> Result<()> {
 
             for (t, v) in resp {
                 let d = Utc.timestamp(t, 0);
-                kas::upsert_hour_count_in_transaction(conn, d.date(), d.hour(), v)?;
+                kas::upsert_hour_count_in_transaction(
+                    conn,
+                    d.date(),
+                    d.hour(),
+                    v,
+                )?;
             }
 
             kas::drop_summary(&conn)?;
 
-            let resp = client.post(&format!("{}/revert/terminate", &hub.hub_url))
+            let resp = client
+                .post(&format!("{}/revert/terminate", &hub.hub_url))
                 .header("Keyr-Token", &hub.api_token)
                 .send()?;
 

@@ -1,14 +1,14 @@
-use chrono::{Utc, NaiveDateTime, DateTime, Timelike, TimeZone};
-use diesel::prelude::*;
+use chrono::{DateTime, NaiveDateTime, TimeZone, Timelike, Utc};
 use diesel::pg::Pg;
+use diesel::prelude::*;
 
 use std::collections::HashMap;
 
-use keyr_types::{Summary, KeystrokesStats};
+use keyr_types::{KeystrokesStats, Summary};
 
-use crate::users::{MaybeUserId, UserId};
-use crate::schema::statistics as stats;
 use crate::error::{KeyrHubstorageError, Result};
+use crate::schema::statistics as stats;
+use crate::users::{MaybeUserId, UserId};
 
 pub fn upsert_keystrokes_count<Conn>(
     conn : &Conn,
@@ -16,12 +16,13 @@ pub fn upsert_keystrokes_count<Conn>(
     date : &DateTime<Utc>,
     count : i32,
 ) -> Result<()>
-where Conn : Connection<Backend = Pg> {
+where
+    Conn : Connection<Backend = Pg>,
+{
     conn.transaction(|| {
         let id = mid.validate(conn)?;
         upsert_keystrokes_count_in_transaction(conn, id, &date, count)
     })
-
 }
 
 pub fn upsert_keystrokes_count_in_transaction<Conn>(
@@ -30,15 +31,20 @@ pub fn upsert_keystrokes_count_in_transaction<Conn>(
     date : &DateTime<Utc>,
     count : i32,
 ) -> Result<()>
-where Conn : Connection<Backend = Pg> {
+where
+    Conn : Connection<Backend = Pg>,
+{
     if crate::users::is_frozen_in_transaction(conn, id)? {
         return Err(KeyrHubstorageError::FrozenUser);
     }
 
     let date = date
-        .with_nanosecond(0).unwrap()
-        .with_second(0).unwrap()
-        .with_minute(0).unwrap()
+        .with_nanosecond(0)
+        .unwrap()
+        .with_second(0)
+        .unwrap()
+        .with_minute(0)
+        .unwrap()
         .naive_utc();
 
     let prev = stats::table
@@ -53,14 +59,14 @@ where Conn : Connection<Backend = Pg> {
             diesel::update(stats::table.find(id))
                 .set(stats::count.eq(prev_count + count))
                 .execute(conn)?;
-        },
+        }
         None => {
             diesel::insert_into(stats::table)
-                .values(vec![
-                    (stats::timestamp.eq(&date),
-                     stats::count.eq(count),
-                     stats::user_id.eq(id.0))
-                ])
+                .values(vec![(
+                    stats::timestamp.eq(&date),
+                    stats::count.eq(count),
+                    stats::user_id.eq(id.0),
+                )])
                 .execute(conn)?;
         }
     }
@@ -74,7 +80,9 @@ pub fn commit<Conn>(
     today : DateTime<Utc>,
     sa : &KeystrokesStats,
 ) -> Result<Summary>
-where Conn : Connection<Backend = Pg> {
+where
+    Conn : Connection<Backend = Pg>,
+{
     conn.transaction(|| {
         let id = id.validate(conn)?;
 
@@ -95,7 +103,9 @@ pub fn get_summary_in_transaction<Conn>(
     id : UserId,
     today : DateTime<Utc>,
 ) -> Result<Summary>
-where Conn : Connection<Backend = Pg> {
+where
+    Conn : Connection<Backend = Pg>,
+{
     let oldest_entry = stats::table
         .select(stats::timestamp)
         .filter(stats::user_id.eq(id.0))
@@ -127,7 +137,9 @@ pub fn get_keystrokes_stats_in_transaction<Conn>(
     conn : &Conn,
     id : UserId,
 ) -> Result<KeystrokesStats>
-where Conn : Connection<Backend = Pg> {
+where
+    Conn : Connection<Backend = Pg>,
+{
     let datas = stats::table
         .select((stats::timestamp, stats::count))
         .filter(stats::user_id.eq(id.0))
@@ -144,9 +156,11 @@ where Conn : Connection<Backend = Pg> {
 
 pub fn initiate_revert_in_transaction<Conn>(
     conn : &Conn,
-    id : UserId
+    id : UserId,
 ) -> Result<KeystrokesStats>
-where Conn : Connection<Backend = Pg> {
+where
+    Conn : Connection<Backend = Pg>,
+{
     crate::users::freeze_user_in_transaction(conn, id)?;
 
     get_keystrokes_stats_in_transaction(conn, id)
@@ -154,9 +168,11 @@ where Conn : Connection<Backend = Pg> {
 
 pub fn initiate_revert<Conn>(
     conn : &Conn,
-    id : MaybeUserId
+    id : MaybeUserId,
 ) -> Result<KeystrokesStats>
-where Conn : Connection<Backend = Pg> {
+where
+    Conn : Connection<Backend = Pg>,
+{
     conn.transaction(|| {
         let id = id.validate(conn)?;
         let res = initiate_revert_in_transaction(conn, id)?;
@@ -167,11 +183,12 @@ where Conn : Connection<Backend = Pg> {
 
 pub fn terminate_revert_in_transaction<Conn>(
     conn : &Conn,
-    id : UserId
+    id : UserId,
 ) -> Result<()>
-where Conn : Connection<Backend = Pg> {
-    diesel::delete(stats::table
-                   .filter(stats::user_id.eq(id.0)))
+where
+    Conn : Connection<Backend = Pg>,
+{
+    diesel::delete(stats::table.filter(stats::user_id.eq(id.0)))
         .execute(conn)?;
 
     crate::users::unfreeze_user_in_transaction(conn, id)?;
@@ -179,11 +196,10 @@ where Conn : Connection<Backend = Pg> {
     Ok(())
 }
 
-pub fn terminate_revert<Conn>(
-    conn : &Conn,
-    id : MaybeUserId
-) -> Result<()>
-where Conn : Connection<Backend = Pg> {
+pub fn terminate_revert<Conn>(conn : &Conn, id : MaybeUserId) -> Result<()>
+where
+    Conn : Connection<Backend = Pg>,
+{
     conn.transaction(|| {
         let id = id.validate(conn)?;
         terminate_revert_in_transaction(conn, id)

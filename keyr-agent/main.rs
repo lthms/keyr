@@ -17,19 +17,21 @@
  * along with keyr.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#[macro_use] extern crate serde_json;
-#[macro_use] extern crate anyhow;
+#[macro_use]
+extern crate serde_json;
+#[macro_use]
+extern crate anyhow;
 
 use anyhow::Result;
 
 use keyr_agentstorage as kas;
 
 pub mod cli;
-pub mod config;
-pub mod stage;
 pub mod commit;
-pub mod revert;
+pub mod config;
 pub mod format;
+pub mod revert;
+pub mod stage;
 
 use crate::cli::Output;
 use crate::config::AgentConfig;
