@@ -9,7 +9,7 @@ edition = "2018"
 license = "GPL-3.0-or-later"
 
 [dependencies]
-chrono = "0.4"
+chrono = "=0.4.22"
 diesel = { version = "1.4", features = ["postgres", "chrono"] }
 diesel_migrations = "1.4"
 thiserror = "1.0"

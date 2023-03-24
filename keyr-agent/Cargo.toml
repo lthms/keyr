@@ -10,7 +10,7 @@ license = "GPL-3.0-or-later"
 
 [dependencies]
 anyhow = "1"
-chrono = "0.4"
+chrono = "=0.4.22"
 clap = "2"
 num-format = { version = "0.4", features = ["with-system-locale"] }
 reqwest = { version = "0.10", features = ["blocking", "json"] }
